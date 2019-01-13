@@ -24,4 +24,4 @@ residual = infer(estMdl, train_data);
 yp = train_data + residual;
 
 %% Plot predicted values
-plot(1:num_responses, train_data, 'k', 1:num_responses, yp, 'r--');
+plot(1:num_responses, train_data, 'k', 1:num_responses, yp, 'r--    ');
