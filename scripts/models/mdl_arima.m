@@ -8,25 +8,20 @@ open_timeseries = open_timeseries(:);
 split = floor(numel(open_timeseries)*0.8);
 
 train_data = open_timeseries(1:split+1);    
-mu = mean(train_data);
-sig = std(train_data);
-normalized_train_data = (train_data - mu) / sig;
-
 X_train = train_data(1:end-1).';
 y_train = train_data(2:end).';
 
 y_test = open_timeseries(split+1:end).';
 
 %% Build arima model
-mdl = arima();
+mdl = arima(0, 1, 0);
 
 %% Estimate parameters
 estMdl = estimate(mdl, train_data);
 
-%% Predict
-opt = forecastOptions('InitialCOndition','z');
-num_responses = size(train_data, 1);
-yp = forecast(estMdl, num_responses, opt);
+%% Inference
+residual = infer(estMdl, train_data);
+yp = train_data + residual;
 
 %% Plot predicted values
-plot(1:num_responses, train_data, 'k', 1:num_responses, yp, '*b');
+plot(1:num_responses, train_data, 'k', 1:num_responses, yp, 'r--');
