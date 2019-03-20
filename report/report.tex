@@ -1,0 +1,169 @@
+\documentclass[12pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{cite}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+
+\title{Foreign Exchange Rates forcasting with LSTM}
+\author{Huy Phung, Tashi Choden, Sahil Pasricha
+  \\University of Konstanz}
+\date{February 2019}
+
+
+\begin{document}
+
+\maketitle
+\pagebreak
+\tableofcontents
+\pagebreak
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Abstract}
+Foreign Exchange (abbv \textit{Forex}) is the market for curency investment. It
+is the second most important market, after stock market. Forex rate has been
+surveyed carefully by financial in order to explain the market behaviour or
+forcast the future price. We evaluate the performance and compare of LSTM to the
+widely used statistical models (ARIMA and VARMA) in forcasting of financial
+timeseries. \\
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Data Description}
+\subsection{Forex rates}
+Foreign Exchange Rates is the rates at which a pair of two currencies are
+exchanged. The rates are decided solely by the market within milliseconds,
+normally by financial 
+protocol FIX. 
+Important terms
+- Open, High, Low, Close
+- Bid, Ask and Spread
+In this project, the
+
+\subsection{Dataset}
+Dataset OHLC of BID price (lack of ASK price)
+
+%% TODO add additional features: avg price, volume, pca
+
+\subsection{Forcasting}
+In this project, we concern about the prediction of future Open, High, Low,
+Close prices. Other features, either originally exists (volume) or later added
+(mean, median, momentum), are only considered as supporting features. These
+features are only used for prediction of OHLC features.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Model selecion}
+\subsubsection{Akaike Information Criterion (AIC)}
+For statistical model selection, we use Akaike Information Criterion (AIC). 
+As we can see, AIC penalize a model by its number of parameters. The
+number of parameters of a neural network based model is at least total number of
+elements contained in all weights in its topology. Therefore, we should not use
+AIC as a measure of performance between statistical models and deep learning
+models.
+$$
+AIC = 2k -2\ln(\hat{L})
+$$
+
+\subsubsection{Root Mean Squared Error (RMSE)}
+Root Mean Squared Error is widely used to measure the difference between values
+predicted by a model and the actually observed values. Given $y$ represents the
+actually observed values and $\hat{y}$ represents the values predicted, $RMSE$
+is given by:
+$$
+RMSE = \left( \frac{1}{n}\sum _{i=1}^{n}(y_i -\hat{y}_i)^2 \right)^\frac{1}{2}
+$$
+Root Mean Squared Error shows absolute difference between $y$ and $\hat{y}$.
+However, since it does not take the range of possible values into account, it
+would be difficult to intepret the $RMSE$ result without knowing the possible
+range of predicted and actual values. 
+
+\subsubsection{Mean Absolute Percentage Error (MAPE)}
+In order to measure the difference between predicted values and actual values
+with regarding to the scale, we use Mean Absolute Percentage Error (MAPE)
+$$
+MAPE = \frac{100\%}{n}\sum  _{i=1}^{n}\left| \frac{y_i -\hat{y}_i}{y_i} \right|
+$$
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\section{Statistical Models}
+\subsection{Autocorrelation}
+
+\subsection{ARIMA}
+\subsubsection{AR(p)}
+ARIMA consists of 2 sub models: AR(p) and MA(q)
+
+\subsubsection{MA(q)}
+
+\subsubsection{ARIMA(p,d,q)}
+
+\subsubsection{Parameters selection}
+It is important for ARIMA model that we select the proper parameter $(p, d, q)$
+so that it covers all the past values which has effect on the current value. In
+order to do so, we first look at survey the ACF and PACF plot. For $AR(p)$ model
+, we find the furthest lag with significant autocorrelation in ACF plot. For
+$MA(q)$, we find at which lag the autocorrelation start to decay.
+
+%% TODO add example figure
+
+
+\subsubsection{Result}
+
+\subsection{VAR}
+\subsubsection{Model description}
+VAR is applied to multivariate data
+\subsubsection{Parameters selection}
+Parameters selection for VAR consists only testing a range of lag with AIC. 
+\subsubsection{Result}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\section{Deep Learning Model}
+\subsection{Recurrent Neural Network}
+Recurrent Neural Network (RNN) is introduced by \cite{rumelhart1988learning} to
+process sequential input. In RNN, each state connects to the followed state to form a directed
+graph. The structure of RNN makes it capable of handling sequential data with
+temporal dynamic behaviour.
+%% TODO graphics
+
+One problem that may occurs within RNN is \textit{vanishing gradient}https://www.youtube.com/watch?v=AvQP1WMf1cs
+\cite{hochreiter2001gradient}
+%% TODO graphics
+
+\subsection{Long-Short Term Memory}
+Hochreiter and Schmidhuber (1997) \cite{gers1999learning} presented a network
+architecture to solve the vanishing gradient problem from RNN
+Cummins presented 
+
+\subsection{Proposed Network Topology}
+Kim and Elsaftawy \cite{kimy07lstm} proposed a LSTM structure 
+%% TODO graphics
+Our survey on the data implies that significant autocorrelation may appears even
+further than 20 timesteps into the past. In our proposed network topology, we
+add more hidden units into each LSTM layers, so that the network can learn from
+data points of higher lags.
+
+\subsection{Training and Validation}
+
+\subsection{Results}
+
+\subsubsection{Single Variate}
+
+\subsubsection{Multivariate}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+\section{Conclusion}
+%% TODO Compare the result between lstm and arima/varma
+As the results have shown, ...
+
+However, computational effort spent for training LSTM deep learning model is
+much higher than ARIMA and VAR. Furthermore the, adding components to neural network
+topology results in higher computational cost. 
+
+\pagebreak
+\bibliographystyle{plain}
+\bibliography{report}
+
+\end{document}
