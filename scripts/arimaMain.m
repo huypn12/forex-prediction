@@ -10,8 +10,8 @@ for i = 1:4
     YTrain = eurusdTrain(:, i);
     YTest = eurusdTest(:, i);
     
-    if cfg.execMode == "rerun"
-        [estMdl, YPred, aic, rmse, mape] = appArimaRerun(...
+    if cfg.execMode == "train"
+        [estMdl, YPred, aic, rmse, mape] = appArimaTrain(...
             YTrain, YTest, featureNames(i));
     else
         params = cfg.arima.params(i, :);
@@ -34,7 +34,7 @@ function [estMdl, YPred, aic, rmse, mape] = appArimaVerify(...
     visualizeResult(estMdl, YPred, YTest, rmse, mape, featureName);
 end
 
-function [estMdl, YPred, aic, rmse, mape] = appArimaRerun(...
+function [estMdl, YPred, aic, rmse, mape] = appArimaTrain(...
         YTrain, YTest, featureName)
     %% Run from beginning
     plotAcfPacf(YTrain, featureName);
