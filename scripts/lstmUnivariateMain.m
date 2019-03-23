@@ -1,67 +1,140 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MAIN %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-cfg = config();
+MAIN();
 
-[eurusd, featureNames] = eurusdDataset(cfg.dataset.csvPath, "");
-eurusdStandardized = eurusdStandardize(eurusd);
-[eurusdTrain, YValid, YTest] = eurusdPartition(...
-    eurusdStandardized, cfg.dataset.trainSetRatio);
-[XTrain, YTrain] = kfold(eurusdTrain, 50);
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function [YPred, YTest, rmse, mape] = appLstmUnivariateVerify(YTest, cfg)
-end
-
-function [mdl, YPred, YTest, rmse, mape] = appLstmUnivariateRerun(...
-        YTrain, YTest, cfg)
-    [XTrain, YTrain] = kfold(YTrain, cfg.lstm.maxLags);
+function MAIN()
+    cfg = config();
+    
+    [eurusd, ~] = eurusdDataset(cfg.dataset.csvPath, "");
+    eurusdStandardized = eurusdStandardize(eurusd);
+    [eurusdTrain, ~, YTest] = eurusdPartition(...
+        eurusdStandardized, cfg.dataset.trainSetRatio);
+    
+    if cfg.execMode == "verify"
+        [lstmOpenModel, lstmHighModel, lstmLowModel, lstmCloseModel] =...
+            loadTrainedModels();
+        verifyLstmModels(lstmOpenModel, lstmHighModel, lstmLowModel, lstmCloseModel, YTest);
+        return;
+    end
+    
+    [XTrain, YTrain] = prepareTrainData(eurusdTrain, cfg.numLags);
+    [lstmOpenModel, lstmHighModel, lstmLowModel, lstmCloseModel] = ...
+        trainLstmModels(XTrain, YTrain, 8, 150);
+    saveTrainedModels(lstmOpenModel, lstmHighModel, lstmLowModel, lstmCloseModel);
+    verifyLstmModels(lstmOpenModel, lstmHighModel, lstmLowModel, lstmCloseModel, YTest);
     
 end
 
+function [lstmOpenModel, lstmHighModel, lstmLowModel, lstmCloseModel] =...
+        loadTrainedModels()
+    saveDir = 'saved_models';
+    load(strcat(saveDir, 'lstm_multivariate_models'),...
+        'lstmOpenModel', 'lstmHighModel', 'lstmLowModel', 'lstmCloseModel');
+end
 
+function saveTrainedModels(lstmOpenModel, lstmHighModel, lstmLowModel, lstmCloseModel)
+    saveDir = 'saved_models';
+    save(strcat(saveDir, 'lstm_multivariate_models'),...
+        'lstmOpenModel', 'lstmHighModel', 'lstmLowModel', 'lstmCloseModel');
+end
 
-function [XTrain, YTrain] = kfold(trainset, k)
+function verifyLstmModels(lstmOpenModel, lstmHighModel, lstmLowModel, lstmCloseModel, YTest)
+    YOpenTest = YTest(:, 1);
+    [YOpenPred, openRmse, openMape] = predictLstmModel(lstmOpenModel, YOpenTest);
+    visualizeResult(YOpenTest, YOpenPred, rmse, mape, 'Open');
+    YHighTest = YTest(:, 2);
+    [YHighPred, highRmse, highMape] = predictLstmModel(lstmHighModel, YHighTest);
+    visualizeResult(YHighTest, YHighPred, rmse, mape, 'High');
+    YLowTest = YTest(:, 3);
+    [YLowPred, lowRmse, lowMape] = predictLstmModel(lstmLowModel, YLowTest);
+    visualizeResult(YLowTest, YLowPred, rmse, mape, 'Low');
+    YCloseTest = YTest(:, 4);
+    [YClosePred, closeRmse, closeMape] = predictLstmModel(lstmCloseModel, YCloseTest);
+    visualizeResult(YCloseTest, YClosePred, rmse, mape, 'Close');
+    finalRmse = sqrt(0.25 * (openRmse^2 + highRmse^2 + lowRmse^2 + closeRmse^2));
+    finalMape = 0.25 * (openMape + highMape + lowMape + closeMape);
+    fprintf('Overall error: RMSE=%f MAPE=%f', finalRmse, finalMape);
+end
+
+function [lstmOpenModel, lstmHighModel, lstmLowModel, lstmCloseModel] = ...
+        trainLstmModels(XTrain, YTrain, numFeatures, numResponses)
+    YOpenTrain = YTrain(:, 1);
+    lstmOpenModel = buildAndTrainLstmModel(XTrain, YOpenTrain, numFeatures, numResponses);
+    YHighTrain = YTrain(:, 2);
+    lstmHighModel = buildAndTrainLstmModel(XTrain, YHighTrain, numFeatures, numResponses);    
+    YLowTrain = YTrain(:, 3);
+    lstmLowModel = buildAndTrainLstmModel(XTrain, YLowTrain, numFeatures, numResponses);
+    YCloseTrain = YTrain(:, 4);
+    lstmCloseModel = buildAndTrainLstmModel(XTrain, YCloseTrain, numFeatures, numResponses);
+end
+
+function [XTrain, YTrain] = prepareTrainData(trainset, k)
     %% Fold the original dataset into chunks of size lag
     chunkCount = ceil(size(trainset, 1) / k);
-    XTrain = zeros(chunkCount, k, size(trainset, 2));
+    XTrain = {};%zeros(chunkCount, size(trainset, 2), k);
     YTrain = zeros(chunkCount, size(trainset, 2));
     for i = 1:(size(trainset, 1) - k)
         tmpX = trainset(i:(i + k - 1), :);
         tmpY = trainset((i + k), :);
-        XTrain(i, :, :) = tmpX;
+        XTrain{i} = tmpX.';
         YTrain(i, :) = tmpY;
     end
+    XTrain = XTrain.';
 end
 
-
-
-function [model, training_options] = lstmUnivariate()
-    numFeatures = 1;
-    numHiddenUnits = 50;
-    model = [ ...
+function [lstmModel, options] = buildAndTrainLstmModel(...
+        XTrain, YTrain, numFeatures, numResponses)
+    %% Train a model for one series of observation
+    numHiddenUnits = 125;
+    lstmModel = [ ...
         sequenceInputLayer(numFeatures),...
         lstmLayer(numHiddenUnits, 'OutputMode', 'sequence'),...
         lstmLayer(numHiddenUnits, 'OutputMode', 'sequence'),...
         fullyConnectedLayer(numHiddenUnits),...
-        dropoutLayer(0.5),...
-        lstmLayer(numHiddenUnits, 'OutputMode', 'sequence'),...
-        lstmLayer(numHiddenUnits, 'OutputMode', 'sequence'),...
+        dropoutLayer(0.1),...
         fullyConnectedLayer(numResponses),...
         regressionLayer
         ];
     
-    training_options = trainingOptions(...
+    options = trainingOptions(...
         'adam', ...
-        'MaxEpochs', 5, ... %% For test only
+        'MaxEpochs', 5, ... %% TODO For test only
+        'MiniBatchSize', 32,...
         'GradientThreshold',1, ...
         'InitialLearnRate',0.005, ...
         'LearnRateSchedule','piecewise', ...
         'LearnRateDropPeriod',125, ...
         'LearnRateDropFactor',0.2, ...
         'Verbose',0, ...
-        'Plots','training-progress', ...
-        'ExecutionEnvironment','multi-gpu'...
+        'Plots','training-progress'...
         );
     
+    lstmModel = trainNetwork(XTrain, YTrain, lstmModel, options);
 end
+
+function [YPred, rmse, mape] = predictLstmModel(lstmModel, YTest)
+    YPred = [];
+    for i = 1:numel(YTest)
+        [lstmModel, YPred(:,i)] = predictAndUpdateState(...
+            lstmModel,YTest(:,i),'ExecutionEnvironment','cpu');
+    end
+    [rmse, mape] = computePredError(YTest, YPred);
+end
+
+function [errRmse, errMape] = computePredError(YTest, YPred)
+    errRmse = rmse(YTest, YPred);
+    errMape = mape(YTest, YPred);
+end
+
+function visualizeResult(YPred, YTest, rmse, mape, featureName)
+    %% Plot the predicted value, observed value, and error
+    modelDesc = "LSTM, 8 features multivariate";
+    figureTag = strcat(modelDesc + ", EURUSD BID, ", featureName, " price");
+    figure('Name', figureTag);
+    plot(YTest)
+    hold on
+    plot(YPred,'.-')
+    hold off
+    legend(["Observed" "Predicted"])
+    ylabel("EURUSD")
+    title("RMSE=" + rmse + " MAPE=" + mape);
+end
+

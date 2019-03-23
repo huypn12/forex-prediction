@@ -1,45 +1,39 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% MAIN %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-cfg = config();
+MAIN();
 
-[eurusd, featureNames] = eurusdDataset(cfg.dataset.csvPath, "");
-[YTrain, ~, YTest] = eurusdPartition(...
-    eurusd, cfg.dataset.trainSetRatio);
-YTrain = YTrain(:, 1:4);
-YTest = YTest(:, 1:4);
-
-if cfg.execMode == "train"
-    [estMdl, YPred, aic, rmse, mape] = appVarmTrain(...
-        YTrain, YTest, featureNames, cfg);
-else
-    p = cfg.var.P;
-    [estMdl, YPred, aic, rmse, mape] = appVarmVerify(YTrain, YTest, P);
-end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-function [varmMdl, YPred, aic, rmse, mape] = appVarmTrain(...
-        YTrain, YTest, featureNames, cfg)
-    [varmMdl, aic] = varmSearchParams(YTrain, cfg.maxLags);
-    [YPred, rmse, mape] = varmPredict(varmMdl, YTest, 1);
-    save(modelFilename(), 'varmMdl');
-    visualizeResult(varmMdl, YPred, YTest, rmse, mape, featureNames);
-end
-
-function filename = modelFilename()
-    filename = strcat('varma_ohlc_', datestr(now,'yyyymmddTHHMMSS'));
-end
-
-function [YPred, aic, rmse, mape] = appVarmVerify(YTest, cfg)
-    load(cfg.varm.savedModel, 'varmMdl');
-    varmMdlSummary = summarize(varmMdl);
-    aic = varmMdlSummary.aic;
-    [YPred, rmse, mape] = varmPredict(varmMdl, YTest, 1);
+function MAIN()
+    cfg = config();
+    
+    [eurusd, featureNames] = eurusdDataset(cfg.dataset.csvPath, "");
+    [YTrain, ~, YTest] = eurusdPartition(...
+        eurusd, cfg.dataset.trainSetRatio);
+    YTrain = YTrain(:, 1:4);
+    YTest = YTest(:, 1:4);
+    
+    if cfg.execMode == "verify"    
+        load(cfg.varm.savedModelsFile, 'varmMdl');
+        [YPred, varmRmse, varmMape] = predictVarm(varmMdl, YTest, cfg.numResponses);
+        mesg = strcat('Optimal parameter P=', num2str(varmMdl.P),...
+            ' RMSE=', num2str(varmRmse), ' MAPE=', num2str(varmMape));
+        display(mesg);
+        visualizeResult(varmMdl, YPred, YTest, featureNames);
+        return
+    end
+    
+    [varmMdl, ~] = searchVarmParams(YTrain, cfg.numLags);
+    save(cfg.varm.savedModelsFile, 'varmMdl');
+    [YPred, varmRmse, varmMape] = predictVarm(varmMdl, YTest, cfg.numResponses);
+    mesg = strcat('Optimal parameter P=', num2str(varmMdl.P),...
+        ' RMSE=', num2str(varmRmse), ' MAPE=', num2str(varmMape));
+    display(mesg);
+    visualizeResult(varmMdl, YPred, YTest, featureNames);
+    
 end
 
-function [varmMdl, aic] = varmSearchParams(YTrain, maxLags)
+function [varmMdl, aic] = searchVarmParams(YTrain, numLags)
     dimInput = size(YTrain, 2);
     minAic = Inf;
     minMdl = varm(dimInput, 1);
-    for lag = 1:maxLags
+    for lag = 1:numLags
         mdl = varm(dimInput, lag);
         estMdl = estimate(mdl, YTrain);
         results = summarize(estMdl);
@@ -50,9 +44,10 @@ function [varmMdl, aic] = varmSearchParams(YTrain, maxLags)
         end
     end
     varmMdl = minMdl;
+    aic = minAic;
 end
 
-function [YPred, mape, rmse] = varmPredict(estMdl, YTest, numResponse)
+function [YPred, mape, rmse] = predictVarm(estMdl, YTest, numResponse)
     %% Predict num_response values ahead from model and Y
     YTest = YTest.';
     YPred = zeros(size(YTest));
@@ -75,9 +70,11 @@ function [errRmse, errMape] = computePredError(YTest, YPred)
     errMape = mape(YTest, YPred);
 end
 
-function visualizeResult(estMdl, YTest, YPred, mapeErr, rmseErr, featureNames)
+function visualizeResult(estMdl, YTest, YPred, featureNames)
     %% Plot the predicted value, observed value, and error
-    modelDesc = strcat("VAR(", num2str(estMdl.P), ")");
+    modelSummary = summarize(estMdl);
+    modelDesc = strcat("VAR(", num2str(estMdl.P), ") AIC=",...
+        num2str(modelSummary.AIC));
     for i = 1:4 
         uniRmse = rmse(YTest(:, i), YPred(:, i));
         uniMape = mape(YTest(:, i), YPred(:, i));
@@ -88,7 +85,7 @@ function visualizeResult(estMdl, YTest, YPred, mapeErr, rmseErr, featureNames)
         plot(YPred(:, i), 'r')
         hold off
         legend(["Observed" "Predicted"])
-        ylabel("EURUSD")
+        ylabel("EURUSD BID price")
         title(featureNames(i) + ": RMSE=" + uniRmse + " MAPE=" + uniMape);
     end
 end
