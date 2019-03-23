@@ -22,32 +22,47 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Abstract}
-Foreign Exchange (abbv \textit{Forex}) is the market for curency investment. It
-is the second most important market, after stock market. Forex rate has been
-surveyed carefully by financial in order to explain the market behaviour or
-forcast the future price. We evaluate the performance and compare of LSTM to the
-widely used statistical models (ARIMA and VARMA) in forcasting of financial
-timeseries. \\
+Foreign Exchange (abbreviation \textit{Forex} or simply \textit{FX}) Market is
+the decentralized market for currency investment. Forex market is the second
+most important market, after stock market. Supply and demand in the market
+determine Forex rate, in which a pair of currency can be exchanged. Forex Rates
+has been studied in econometrics as a financial timeseries. The purpose of
+studying Forex rates is to explain the market behaviour or forecast future
+prices.\\ 
+In our project, we use statistical models established in econometrics and deep
+learning model to predict the future rates of one step ahead. Our goal is to
+compare the effectiveness of LSTM and statistical models (ARIMA and VAR) as
+timeseries models, in both accuracy and performance.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\section{Data Description}
+\section{Problem Description}
 \subsection{Forex rates}
-Foreign Exchange Rates is the rates at which a pair of two currencies are
-exchanged. The rates are decided solely by the market within milliseconds,
-normally by financial 
-protocol FIX. 
-Important terms
-- Open, High, Low, Close
-- Bid, Ask and Spread
-In this project, the
+Foreign Exchange rates (short Forex rates) are decided solely by support and
+demand of Forex market. Each rate represents the price to buy or sell a pair of
+currency (e.g. EURUSD) at the moment. The price to buy is called Bid price; the
+price to sell is called Ask price. The difference between Bid price and Ask
+price is called Spread. In this project we consider only the Bid price. However,
+if both Bid and Ask (and therefore Spread) were available, our analysis would be
+more precise.\\
+Forex brokers update rates according to the market
+within milliseconds by standardized FIX (Financial Information eXchange)
+protocol. The time interval between each FIX message to update rates is not
+uniform; it may varies from a millisecond to few seconds. Therefore, the
+timeseries is of continuous time step. In order to simplify our
+analysis, we convert it to a data form that has discrete, uniform time
+step, while still keep important information.\\
+One possible way to do so is to format the rates into OHLC format. This approach
+is widely used in financial technical analysis. We partition the timeseries into
+intervals of uniform time $t$, 
+
 
 \subsection{Dataset}
-Dataset OHLC of BID price (lack of ASK price)
+Cite published a dataset consists of OHLC of BID price (lack of ASK price)
 
 %% TODO add additional features: avg price, volume, pca
 
-\subsection{Forcasting}
+\subsection{Forecasting}
 In this project, we concern about the prediction of future Open, High, Low,
 Close prices. Other features, either originally exists (volume) or later added
 (mean, median, momentum), are only considered as supporting features. These
@@ -111,9 +126,10 @@ $MA(q)$, we find at which lag the autocorrelation start to decay.
 
 \subsubsection{Result}
 
-\subsection{VAR}
+\subsection{VAR(p)}
 \subsubsection{Model description}
-VAR is applied to multivariate data
+VAR is applied to multivariate data. It is similar to AR(p) model. However here
+we consider 
 \subsubsection{Parameters selection}
 Parameters selection for VAR consists only testing a range of lag with AIC. 
 \subsubsection{Result}
@@ -145,8 +161,17 @@ further than 20 timesteps into the past. In our proposed network topology, we
 add more hidden units into each LSTM layers, so that the network can learn from
 data points of higher lags.
 
-\subsection{Training and Validation}
+\subsection{Univariate and Multivariate}
+We consider using LSTM network in two usecases. In the first usecases, we train
+the network to predict future values only by giving to history lags of one
+timeseries (univariate). For example, we train the network to predict 3 Open
+prices in the future given only the Open prices in the past. This usecases is
+designed to compare the performance with ARIMA(p, d, q) model.\\
+In the second usecase, 
 
+\subsection{Training and Validation}
+As we can see from training progress, after the first epoch, the loss within the
+network does not decrease any more, meanwhile the 
 \subsection{Results}
 
 \subsubsection{Single Variate}
