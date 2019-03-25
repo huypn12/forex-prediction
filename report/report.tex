@@ -1,7 +1,8 @@
-\documentclass[12pt]{article}
+\documentclass[11pt]{article}
 
 \usepackage[utf8]{inputenc}
 \usepackage{cite}
+\usepackage{url}
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{amsfonts}
@@ -28,11 +29,11 @@ most important market, after stock market. Supply and demand in the market
 determine Forex rate, in which a pair of currency can be exchanged. Forex Rates
 has been studied in econometrics as a financial timeseries. The purpose of
 studying Forex rates is to explain the market behaviour or forecast future
-prices.\\ 
-In our project, we use statistical models established in econometrics and deep
-learning model to predict the future rates of one step ahead. Our goal is to
-compare the effectiveness of LSTM and statistical models (ARIMA and VAR) as
-timeseries models, in both accuracy and performance.
+prices.\\
+In our project, we use statistical models and deep learning model to predict the
+future rates of one step ahead. Our goal is to compare the effectiveness of LSTM
+and statistical models (ARIMA and VAR) as timeseries models, in both accuracy
+and performance.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -54,32 +55,42 @@ analysis, we convert it to a data form that has discrete, uniform time
 step, while still keep important information.\\
 One possible way to do so is to format the rates into OHLC format. This approach
 is widely used in financial technical analysis. We partition the timeseries into
-intervals of uniform time $t$, 
+intervals of uniform time length $t$. For each interval, we keep only 4 rate:
+the first (\textit{open}), the last (\textit{close}), the maximum
+(\textit{high}), the minimum (\textit{low}). Since the time intervals are
+uniform among dataset, we have the desired discrete, uniform time step for
+analysis.
 
+%% TODO figure here 
 
-\subsection{Dataset}
-Cite published a dataset consists of OHLC of BID price (lack of ASK price)
-
-%% TODO add additional features: avg price, volume, pca
-
-\subsection{Forecasting}
+\subsection{Prediction}
 In this project, we concern about the prediction of future Open, High, Low,
 Close prices. Other features, either originally exists (volume) or later added
 (mean, median, momentum), are only considered as supporting features. These
-features are only used for prediction of OHLC features.
+features are only used for prediction of OHLC features.\\
+The problem we are trying to solve in this project is declared as follow: given
+history data in OHLC form of Forex rates $x_0, x_1,\ldots,x_k$, predict future
+rate of \textit{one} step ahead, $x_{k+1}$.
+
+\subsection{Dataset}
+Acquiring real-time data is expensive, due to the fact that most FIX data
+providers requires subscription contract. However, Janus \cite{meehau16eurusd}
+collected an EURUSD rate dataset. The dataset consists of OHLC of BID price (no
+ASK price) of EURUSD rates from 2010 to 2016, thus contains 245444 values. Time
+interval for OHLC value is uniformly set to 15 minutes. Janus also published a
+smaller sample dataset, which contains only 14880 values.We would use the sample
+dataset later for ARIMA parameter search to reduce computational effort.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Model selecion}
+\subsection{Model selection}
 \subsubsection{Akaike Information Criterion (AIC)}
-For statistical model selection, we use Akaike Information Criterion (AIC). 
-As we can see, AIC penalize a model by its number of parameters. The
-number of parameters of a neural network based model is at least total number of
-elements contained in all weights in its topology. Therefore, we should not use
-AIC as a measure of performance between statistical models and deep learning
-models.
+Akaike Information Criterion (AIC) is basically log-likelihood, but penalized a
+model by the number of parameters. AIC is widely used in statistical model
+selection, not only ARIMA and VAR, but also Hidden Markov Model and so on.
 $$
 AIC = 2k -2\ln(\hat{L})
 $$
+in which $k$ is the number of parameters and $L$ is the log-likelihood.\\
 
 \subsubsection{Root Mean Squared Error (RMSE)}
 Root Mean Squared Error is widely used to measure the difference between values
@@ -104,79 +115,104 @@ $$
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 \section{Statistical Models}
-\subsection{Autocorrelation}
+\subsection{Autocorrelation and discrete white noises}
+Let $\{x_t\}$ is a timeseries with $\mu=\mu(t)$ is its mean and
+$\sigma=\sigma(t)$ is its variance. \textbf{Autocovariance} of lag $k$ is
+defined as $C_k=E[(x_t-\mu)(x_{t+k}-\mu)]$. \textbf{Autocorrelation} 
+A time series $\{w_t\}$ is said to be\textit{discrete white noises} if its
+elements $w_i$ are independent, identicaly distributed, have zero mean and no
+autocorrelation between any of its values, $Cor(w_i,w_j)\neq 0, \forall i \neq
+j$.
 
-\subsection{ARIMA}
-\subsubsection{AR(p)}
-ARIMA consists of 2 sub models: AR(p) and MA(q)
-
-\subsubsection{MA(q)}
-
-\subsubsection{ARIMA(p,d,q)}
+\subsection{ARIMA(p,d,q)}
+\subsubsection{Model description}
+The first model we consider is similar to linear regression to some extents.
+$ARIMA(p,d,q)$ model consists of three components $AR(p)$, $MA(q)$ and
+intergrated series $I$ of order $d$. $ARIMA(p,d,q)$ rationale is that we find a
+linear relation between the value at time $t$ and certain \textit{lags} before
+it. Detailed explanation of the model can be found at \cite{GVK4844634242}.\\
+$ARIMA(p,d,q)$ consists of two components: an \textit{autoregression} $AR(p)$, a
+\textit{moving average} $MA(q)$
 
 \subsubsection{Parameters selection}
 It is important for ARIMA model that we select the proper parameter $(p, d, q)$
 so that it covers all the past values which has effect on the current value. In
 order to do so, we first look at survey the ACF and PACF plot. For $AR(p)$ model
 , we find the furthest lag with significant autocorrelation in ACF plot. For
-$MA(q)$, we find at which lag the autocorrelation start to decay.
+$MA(q)$, we find at which lag the autocorrelation start to decay.\\
+Another method is that we try all possible combination of $p$, $d$ and $q$ to
+find the combination which gives us the lowest AIC.
 
-%% TODO add example figure
+\subsubsection{Results}
 
-
-\subsubsection{Result}
 
 \subsection{VAR(p)}
 \subsubsection{Model description}
-VAR is applied to multivariate data. It is similar to AR(p) model. However here
-we consider 
+VAR is applied to multivariate data. It is similar to $AR(p)$ model. However we
+apply the model for a vector ${\mathbb{x_t}}$ of multivariate timeseries instead
+of using a single value.
+
 \subsubsection{Parameters selection}
 Parameters selection for VAR consists only testing a range of lag with AIC. 
-\subsubsection{Result}
+
+\subsubsection{Results} 
+%% TODO figure here
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 \section{Deep Learning Model}
 \subsection{Recurrent Neural Network}
 Recurrent Neural Network (RNN) is introduced by \cite{rumelhart1988learning} to
-process sequential input. In RNN, each state connects to the followed state to form a directed
-graph. The structure of RNN makes it capable of handling sequential data with
-temporal dynamic behaviour.
+process sequential input. In RNN, each state connects to the followed state to
+form a directed graph. The structure of RNN makes it capable of handling
+sequential data with temporal dynamic behaviour.
 %% TODO graphics
 
-One problem that may occurs within RNN is \textit{vanishing gradient}https://www.youtube.com/watch?v=AvQP1WMf1cs
-\cite{hochreiter2001gradient}
-%% TODO graphics
+Recurrent neural network is pointed out to have problems. First is
+\textit{vanishing gradient}.
+
+
+\textit{Exploding gradient} can also be another problem
 
 \subsection{Long-Short Term Memory}
-Hochreiter and Schmidhuber (1997) \cite{gers1999learning} presented a network
-architecture to solve the vanishing gradient problem from RNN
-Cummins presented 
+Hochreiter and Schmidhuber (1997) \cite{gers1999learning} introduced Long-Short
+Term Memory neural network architecture architecture to solve both vanishing
+gradient and exploding gradient problem from RNN Cummins presented
 
 \subsection{Proposed Network Topology}
-Kim and Elsaftawy \cite{kimy07lstm} proposed a LSTM structure 
-%% TODO graphics
 Our survey on the data implies that significant autocorrelation may appears even
 further than 20 timesteps into the past. In our proposed network topology, we
+
 add more hidden units into each LSTM layers, so that the network can learn from
 data points of higher lags.
 
-\subsection{Univariate and Multivariate}
-We consider using LSTM network in two usecases. In the first usecases, we train
-the network to predict future values only by giving to history lags of one
-timeseries (univariate). For example, we train the network to predict 3 Open
-prices in the future given only the Open prices in the past. This usecases is
-designed to compare the performance with ARIMA(p, d, q) model.\\
-In the second usecase, 
+\subsection{Experiments}
+We consider using LSTM network in two experiments. In the first experiments, we
+build and train the network to predict future values only by giving to history
+lags of one timeseries (univariate). For example, we train the network to
+predict one Open price value in the future given only the Open prices in the
+past. This experiments is designed to compare the performance of LSTM with
+$ARIMA(p, d, q)$ model.\\ 
+In the second experiments, we build and train the network so that it would
+predict one values ahead of one feature (e.g. one value of Open price ahead),
+given history values of \textit{all} features in the past. This experiment is
+designed to compare the performance of LSTM to $VAR(p)$ model.\\
+In both experiments, since we want to predict the future values of all Open,
+High, Low and Close features, we have to build and train one mode for each
+feature accordingly. Therefore, in each experiment we have to build and train 4
+models.
 
-\subsection{Training and Validation}
+\subsection{Training}
 As we can see from training progress, after the first epoch, the loss within the
-network does not decrease any more, meanwhile the 
+network does not decrease any more, meanwhile the
 \subsection{Results}
 
 \subsubsection{Single Variate}
 
 \subsubsection{Multivariate}
+
+\section{Implementation}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 \section{Conclusion}
