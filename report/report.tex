@@ -48,7 +48,7 @@ if both Bid and Ask (and therefore Spread) were available, our analysis would be
 more precise.\\
 Forex brokers update rates according to the market
 within milliseconds by standardized FIX (Financial Information eXchange)
-protocol. The time interval between each FIX message to update rates is not
+protocol. The time interval between FIX market update messages are not
 uniform; it may varies from a millisecond to few seconds. Therefore, the
 timeseries is of continuous time step. In order to simplify our
 analysis, we convert it to a data form that has discrete, uniform time
@@ -84,13 +84,15 @@ dataset later for ARIMA parameter search to reduce computational effort.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Model selection}
 \subsubsection{Akaike Information Criterion (AIC)}
-Akaike Information Criterion (AIC) is basically log-likelihood, but penalized a
+Akaike Information Criterion (AIC) is basically log-likelihood, but it penalizes a
 model by the number of parameters. AIC is widely used in statistical model
 selection, not only ARIMA and VAR, but also Hidden Markov Model and so on.
 $$
 AIC = 2k -2\ln(\hat{L})
 $$
-in which $k$ is the number of parameters and $L$ is the log-likelihood.\\
+in which $k$ is the number of parameters and $\hat{L}$ is the likelihood. Since
+the log-likelihood is multiplied by -1, lower AIC means the model fits better to
+the data.
 
 \subsubsection{Root Mean Squared Error (RMSE)}
 Root Mean Squared Error is widely used to measure the difference between values
@@ -111,33 +113,37 @@ with regarding to the scale, we use Mean Absolute Percentage Error (MAPE)
 $$
 MAPE = \frac{100\%}{n}\sum  _{i=1}^{n}\left| \frac{y_i -\hat{y}_i}{y_i} \right|
 $$
+Compare to RMSE, MAPE is easier to interpret, for it is only a ratio without
+unit. Knowing the Max-Min range of the data beforehand is not necessary. The
+drawback could be the absolute value function, which is not continuous and thus
+make it difficult to take it as a loss function. However, we do not use it as a
+loss function here.
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Statistical Models}
-\subsection{Autocorrelation and discrete white noises}
+\subsection{ARIMA(p,d,q)}
+\subsubsection{Autocorrelation and discrete white noises}
 Let $\{x_t\}$ is a timeseries with $\mu=\mu(t)$ is its mean and
 $\sigma=\sigma(t)$ is its variance. \textbf{Autocovariance} of lag $k$ is
-defined as $C_k=E[(x_t-\mu)(x_{t+k}-\mu)]$. \textbf{Autocorrelation} 
-A time series $\{w_t\}$ is said to be\textit{discrete white noises} if its
+defined as $C_k=E[(x_t-\mu)(x_{t+k}-\mu)]$. \textbf{Autocorrelation} is defined
+as $\rho_k=\frac{C_k}{\sigma^2}$.\\
+A time series $\{w_t\}$ is said to be \textit{discrete white noises} if its
 elements $w_i$ are independent, identicaly distributed, have zero mean and no
-autocorrelation between any of its values, $Cor(w_i,w_j)\neq 0, \forall i \neq
-j$.
-
-\subsection{ARIMA(p,d,q)}
+autocorrelation between any of its values. Formally, $\mu=\mu(t)=0$,
+$Cor(w_i,w_j)\neq 0, \forall i \neq j$.
 \subsubsection{Model description}
 The first model we consider is similar to linear regression to some extents.
-$ARIMA(p,d,q)$ model consists of three components $AR(p)$, $MA(q)$ and
-intergrated series $I$ of order $d$. $ARIMA(p,d,q)$ rationale is that we find a
-linear relation between the value at time $t$ and certain \textit{lags} before
-it. Detailed explanation of the model can be found at \cite{GVK4844634242}.\\
-$ARIMA(p,d,q)$ consists of two components: an \textit{autoregression} $AR(p)$, a
-\textit{moving average} $MA(q)$
+\textit{ARIMA(p,d,q)} model consists of three components: \textit{autoregression}
+$AR(p)$, \textit{moving average} $MA(q)$ and \textit{intergrated series} $I$ of
+order $d$. $ARIMA(p,d,q)$ rationale is that we find a linear relation between
+the value at time $t$ and certain \textit{lags} before it. Detailed explanation
+of the model can be found at \cite{GVK4844634242}.\\
+
 
 \subsubsection{Parameters selection}
 It is important for ARIMA model that we select the proper parameter $(p, d, q)$
 so that it covers all the past values which has effect on the current value. In
-order to do so, we first look at survey the ACF and PACF plot. For $AR(p)$ model
+order to do so, we first look at survey the ACF and PACF plot. For ${AR}(p)$ model
 , we find the furthest lag with significant autocorrelation in ACF plot. For
 $MA(q)$, we find at which lag the autocorrelation start to decay.\\
 Another method is that we try all possible combination of $p$, $d$ and $q$ to
@@ -169,11 +175,8 @@ form a directed graph. The structure of RNN makes it capable of handling
 sequential data with temporal dynamic behaviour.
 %% TODO graphics
 
-Recurrent neural network is pointed out to have problems. First is
-\textit{vanishing gradient}.
-
-
-\textit{Exploding gradient} can also be another problem
+Challenges in Recurrent Neural Network are \textit{vanishing gradient} and
+\textit{exploding gradient}.
 
 \subsection{Long-Short Term Memory}
 Hochreiter and Schmidhuber (1997) \cite{gers1999learning} introduced Long-Short
@@ -204,8 +207,7 @@ feature accordingly. Therefore, in each experiment we have to build and train 4
 models.
 
 \subsection{Training}
-As we can see from training progress, after the first epoch, the loss within the
-network does not decrease any more, meanwhile the
+As we can see from training progress, after the second epoch, the loss does not decrease any more, meanwhile the
 \subsection{Results}
 
 \subsubsection{Single Variate}
