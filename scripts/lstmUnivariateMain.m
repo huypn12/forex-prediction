@@ -2,8 +2,6 @@ MAIN();
 
 function MAIN()
     cfg = config();
-%     cfg.dataset.trainSetRatio = 0.1;
-%     cfg.execMode = "verify";
     
     [eurusd, ~] = eurusdDataset(cfg.dataset.csvPath, "");
     eurusdStandardized = eurusdStandardize(eurusd);

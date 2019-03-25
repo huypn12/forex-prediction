@@ -2,7 +2,6 @@ MAIN();
 
 function MAIN()
     cfg = config();
-    cfg.numLags = 1;
     [eurusd, featureNames] = eurusdDataset(cfg.dataset.csvPath, "");
     [YTrain, ~, YTest] = eurusdPartition(... 
         eurusd, cfg.dataset.trainSetRatio);

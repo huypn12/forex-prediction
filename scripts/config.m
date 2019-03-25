@@ -3,11 +3,11 @@ function cfg = config()
     %% "train" :
     %%     - ARIMA and VAR do grid search to confirm the optimal params.
     %%     - LSTM model is trained again.
-    cfg.execMode = "train";
+    %cfg.execMode = "train";
     %% "verify" :
     %%     - ARIMA and VAR simply load the optimal params founded before.
     %%     - LSTM load the pretrained weights
-    %cfg.execMode = "verify";
+    cfg.execMode = "verify";
     
     %% Dataset mode :
     %% "full"   : 245445 records, extremely computationally heavy
