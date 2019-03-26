@@ -46,13 +46,12 @@ price to sell is called Ask price. The difference between Bid price and Ask
 price is called Spread. In this project we consider only the Bid price. However,
 if both Bid and Ask (and therefore Spread) were available, our analysis would be
 more precise.\\
-Forex brokers update rates according to the market
-within milliseconds by standardized FIX (Financial Information eXchange)
-protocol. The time interval between FIX market update messages are not
-uniform; it may varies from a millisecond to few seconds. Therefore, the
-timeseries is of continuous time step. In order to simplify our
-analysis, we convert it to a data form that has discrete, uniform time
-step, while still keep important information.\\
+Forex brokers update rates according to the market within milliseconds by
+standardized FIX (Financial Information eXchange) protocol. The time interval
+between FIX market update messages are not uniform; it may varies from a
+millisecond to few seconds. Therefore, the timeseries is of continuous time
+step. In order to simplify our analysis, we convert it to a data form that has
+discrete, uniform time step, while still keep important information.\\
 One possible way to do so is to format the rates into OHLC format. This approach
 is widely used in financial technical analysis. We partition the timeseries into
 intervals of uniform time length $t$. For each interval, we keep only 4 rate:
@@ -61,7 +60,9 @@ the first (\textit{open}), the last (\textit{close}), the maximum
 uniform among dataset, we have the desired discrete, uniform time step for
 analysis.
 
-%% TODO figure here 
+\begin{figure}
+  
+\end{figure}
 
 \subsection{Prediction}
 In this project, we concern about the prediction of future Open, High, Low,
@@ -78,14 +79,15 @@ providers requires subscription contract. However, Janus \cite{meehau16eurusd}
 collected an EURUSD rate dataset. The dataset consists of OHLC of BID price (no
 ASK price) of EURUSD rates from 2010 to 2016, thus contains 245444 values. Time
 interval for OHLC value is uniformly set to 15 minutes. Janus also published a
-smaller sample dataset, which contains only 14880 values.We would use the sample
-dataset later for ARIMA parameter search to reduce computational effort.
+smaller sample subset of the dataset, which contains only 14880 values.We would
+use the sample dataset later for ARIMA parameter search to reduce computational
+effort.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Model selection}
 \subsubsection{Akaike Information Criterion (AIC)}
-Akaike Information Criterion (AIC) is basically log-likelihood, but it penalizes a
-model by the number of parameters. AIC is widely used in statistical model
+Akaike Information Criterion (AIC) is basically log-likelihood, but it penalizes
+a model by the number of parameters. AIC is widely used in statistical model
 selection, not only ARIMA and VAR, but also Hidden Markov Model and so on.
 $$
 AIC = 2k -2\ln(\hat{L})
@@ -125,32 +127,59 @@ loss function here.
 \subsubsection{Autocorrelation and discrete white noises}
 Let $\{x_t\}$ is a timeseries with $\mu=\mu(t)$ is its mean and
 $\sigma=\sigma(t)$ is its variance. \textbf{Autocovariance} of lag $k$ is
-defined as $C_k=E[(x_t-\mu)(x_{t+k}-\mu)]$. \textbf{Autocorrelation} is defined
+defined as $C_k=E[(x_t-\mu)(x_{t+k}-\mu)]$ and \textbf{autocorrelation} is defined
 as $\rho_k=\frac{C_k}{\sigma^2}$.\\
 A time series $\{w_t\}$ is said to be \textit{discrete white noises} if its
 elements $w_i$ are independent, identicaly distributed, have zero mean and no
 autocorrelation between any of its values. Formally, $\mu=\mu(t)=0$,
 $Cor(w_i,w_j)\neq 0, \forall i \neq j$.
+
 \subsubsection{Model description}
 The first model we consider is similar to linear regression to some extents.
-\textit{ARIMA(p,d,q)} model consists of three components: \textit{autoregression}
-$AR(p)$, \textit{moving average} $MA(q)$ and \textit{intergrated series} $I$ of
-order $d$. $ARIMA(p,d,q)$ rationale is that we find a linear relation between
-the value at time $t$ and certain \textit{lags} before it. Detailed explanation
-of the model can be found at \cite{GVK4844634242}.\\
+$ARIMA(p,d,q)$ rationale is that we find a linear relation between the value at
+time $t$ and certain \textit{lags} before it . Detailed explanation
+of the model can be found at \cite{GVK4844634242}. \textit{ARIMA(p,d,q)}
+consists of three models: $AR(p)$, $MA(q)$ and integrated series of order d. 
 
+A timeseries $\{x_t\}$ is a \textit{Autoregression} $AR(p)$ if it satisfies that
 
 \subsubsection{Parameters selection}
-It is important for ARIMA model that we select the proper parameter $(p, d, q)$
-so that it covers all the past values which has effect on the current value. In
-order to do so, we first look at survey the ACF and PACF plot. For ${AR}(p)$ model
-, we find the furthest lag with significant autocorrelation in ACF plot. For
+It is important for ARIMA model that we select the proper parameter
+$(p, d, q)$ so that it covers all the past values which has effect on the
+current value. In order to do so, we first look at survey the ACF and PACF plot.
+For ${AR}(p)$ model , we find the furthest lag with significant autocorrelation
+in ACF plot. For
 $MA(q)$, we find at which lag the autocorrelation start to decay.\\
 Another method is that we try all possible combination of $p$, $d$ and $q$ to
 find the combination which gives us the lowest AIC.
 
 \subsubsection{Results}
+\begin{figure}[hp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
+  \caption{}
+\end{figure}
 
+%% TODO High
+\begin{figure}[hp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
+  \caption{}
+\end{figure
+
+%% TODO Close
+\begin{figure}[hp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
+  \caption{
+\end{figure}
+
+%% TODO Low
+\begin{figure}[hp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
+  \caption{
+\end{figure}
 
 \subsection{VAR(p)}
 \subsubsection{Model description}
@@ -161,8 +190,34 @@ of using a single value.
 \subsubsection{Parameters selection}
 Parameters selection for VAR consists only testing a range of lag with AIC. 
 
-\subsubsection{Results} 
-%% TODO figure here
+\subsubsection{Results}
+\begin{figure}[hp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
+  \caption{}
+\end{figure}
+
+%% TODO High
+\begin{figure}[hp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
+  \caption{}
+\end{figure
+
+%% TODO Close
+\begin{figure}[hp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
+  \caption{
+\end{figure}
+
+%% TODO Low
+\begin{figure}[hp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
+  \caption{
+\end{figure}
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
@@ -193,7 +248,7 @@ data points of higher lags.
 \subsection{Experiments}
 We consider using LSTM network in two experiments. In the first experiments, we
 build and train the network to predict future values only by giving to history
-lags of one timeseries (univariate). For example, we train the network to
+lags of one timeseries \textit{(univariate)}. For example, we train the network to
 predict one Open price value in the future given only the Open prices in the
 past. This experiments is designed to compare the performance of LSTM with
 $ARIMA(p, d, q)$ model.\\ 
