@@ -7,6 +7,7 @@
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
+\usepackage{algorithmicx}
 
 \title{Foreign Exchange Rates forcasting with LSTM}
 \author{Huy Phung, Tashi Choden, Sahil Pasricha
@@ -61,7 +62,9 @@ uniform among dataset, we have the desired discrete, uniform time step for
 analysis.
 
 \begin{figure}
-  
+  \centering
+  \includegraphics[width=0.9\linewidth]{figs/ohlc.png}
+  \caption{}
 \end{figure}
 
 \subsection{Prediction}
@@ -70,8 +73,9 @@ Close prices. Other features, either originally exists (volume) or later added
 (mean, median, momentum), are only considered as supporting features. These
 features are only used for prediction of OHLC features.\\
 The problem we are trying to solve in this project is declared as follow: given
-history data in OHLC form of Forex rates $x_0, x_1,\ldots,x_k$, predict future
-rate of \textit{one} step ahead, $x_{k+1}$.
+history data in OHLC form of Forex rates, namely $x_0, x_1,\ldots,x_k$ where
+$x_i=(x^O_i, x^H_i, x^L_i, x^C_i )$, predict future rate of \textit{one} step
+ahead, $x_{k+1}$. 
 
 \subsection{Dataset}
 Acquiring real-time data is expensive, due to the fact that most FIX data
@@ -79,7 +83,7 @@ providers requires subscription contract. However, Janus \cite{meehau16eurusd}
 collected an EURUSD rate dataset. The dataset consists of OHLC of BID price (no
 ASK price) of EURUSD rates from 2010 to 2016, thus contains 245444 values. Time
 interval for OHLC value is uniformly set to 15 minutes. Janus also published a
-smaller sample subset of the dataset, which contains only 14880 values.We would
+smaller sample subset of the dataset, which contains only 14880 values. We would
 use the sample dataset later for ARIMA parameter search to reduce computational
 effort.
 
@@ -104,10 +108,10 @@ is given by:
 $$
 RMSE = \left( \frac{1}{n}\sum _{i=1}^{n}(y_i -\hat{y}_i)^2 \right)^\frac{1}{2}
 $$
-Root Mean Squared Error shows absolute difference between $y$ and $\hat{y}$.
-However, since it does not take the range of possible values into account, it
-would be difficult to intepret the $RMSE$ result without knowing the possible
-range of predicted and actual values. 
+Root Mean Squared Error shows difference between $y$ and $\hat{y}$ regardless
+the difference is negative or positive. However, since it does not take the
+range of possible values into account, it would be difficult to intepret the
+$RMSE$ result without knowing the possible range of predicted and actual values.
 
 \subsubsection{Mean Absolute Percentage Error (MAPE)}
 In order to measure the difference between predicted values and actual values
@@ -123,25 +127,38 @@ loss function here.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Statistical Models}
-\subsection{ARIMA(p,d,q)}
-\subsubsection{Autocorrelation and discrete white noises}
+\subsection{Basic of Time series.}
 Let $\{x_t\}$ is a timeseries with $\mu=\mu(t)$ is its mean and
 $\sigma=\sigma(t)$ is its variance. \textbf{Autocovariance} of lag $k$ is
-defined as $C_k=E[(x_t-\mu)(x_{t+k}-\mu)]$ and \textbf{autocorrelation} is defined
+defined as $C_k=E[(x_t-\mu)(x_{t+k}-\mu)]$ and \textbf{autocorrelation} is
+defined
 as $\rho_k=\frac{C_k}{\sigma^2}$.\\
-A time series $\{w_t\}$ is said to be \textit{discrete white noises} if its
-elements $w_i$ are independent, identicaly distributed, have zero mean and no
-autocorrelation between any of its values. Formally, $\mu=\mu(t)=0$,
-$Cor(w_i,w_j)\neq 0, \forall i \neq j$.
+A time series $\{e_t\}$ is a \textit{discrete white noises} if its elements
+$e_i$ are independent, identically distributed, have mean equals to zero and no
+autocorrelation between any of its values. Formally,
+$\mu_{\{e_t\}}=\mu_{\{e_t\}}(t)=0$,
+$Cor(e_i,e_j)\neq 0, \forall i \neq j$.\\
+A time series $\{x_t\}$ is a \textit{random walk} if it satisfies that
+$x_t=x_{t-1}+e_t$ where $\{e_t\}$ is a discrete white noise as described above.\\
+The following models we consider are similar to linear regression to some
+extents. Their rationales is that we find a linear relation between the
+value at time $t$ and certain \textit{lags} before it . Detailed explanation of
+the models can be found at \cite{GVK483463442}.
 
+\subsection{ARIMA(p,d,q)}
 \subsubsection{Model description}
-The first model we consider is similar to linear regression to some extents.
-$ARIMA(p,d,q)$ rationale is that we find a linear relation between the value at
-time $t$ and certain \textit{lags} before it . Detailed explanation
-of the model can be found at \cite{GVK4844634242}. \textit{ARIMA(p,d,q)}
-consists of three models: $AR(p)$, $MA(q)$ and integrated series of order d. 
+\textit{ARIMA(p,d,q)} consists of three models: $AR(p)$, $MA(q)$ and integrated series of order d.\\
+A timeseries $\{x_t\}$ is a \textit{Auto-Regression} $AR(p)$ if it satisfies that
+$$
+x_t = \alpha_1x_{t-1} + \ldots + \alpha_{t-p}x_{t-p} + e_t 
+$$
+where $\{e_t\}$ is discrete white noises.\\
+A timeseries $\{x_t\}$ is a \textit{Moving Average} $AR(p)$ if it satisfies that
+$$
+x_t = \alpha_1e_{t-1} + \ldots + \alpha_{t-p}e_{t-p} + e_t 
+$$
+where $\{e_t\}$ is discrete white noises.\\
 
-A timeseries $\{x_t\}$ is a \textit{Autoregression} $AR(p)$ if it satisfies that
 
 \subsubsection{Parameters selection}
 It is important for ARIMA model that we select the proper parameter
@@ -152,6 +169,8 @@ in ACF plot. For
 $MA(q)$, we find at which lag the autocorrelation start to decay.\\
 Another method is that we try all possible combination of $p$, $d$ and $q$ to
 find the combination which gives us the lowest AIC.
+Algorithm for parameters selection:
+
 
 \subsubsection{Results}
 \begin{figure}[hp]
@@ -165,20 +184,20 @@ find the combination which gives us the lowest AIC.
   \centering
   \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
   \caption{}
-\end{figure
+\end{figure}
 
 %% TODO Close
 \begin{figure}[hp]
   \centering
   \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
-  \caption{
+  \caption{}
 \end{figure}
 
 %% TODO Low
 \begin{figure}[hp]
   \centering
   \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
-  \caption{
+  \caption{}
 \end{figure}
 
 \subsection{VAR(p)}
@@ -202,20 +221,20 @@ Parameters selection for VAR consists only testing a range of lag with AIC.
   \centering
   \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
   \caption{}
-\end{figure
+\end{figure}
 
 %% TODO Close
 \begin{figure}[hp]
   \centering
   \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
-  \caption{
+  \caption{}
 \end{figure}
 
 %% TODO Low
 \begin{figure}[hp]
   \centering
   \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
-  \caption{
+  \caption{}
 \end{figure}
 
 
