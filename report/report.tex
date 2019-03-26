@@ -4,6 +4,8 @@
 \usepackage{cite}
 \usepackage{url}
 \usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
@@ -62,9 +64,16 @@ uniform among dataset, we have the desired discrete, uniform time step for
 analysis.
 
 \begin{figure}
-  \centering
-  \includegraphics[width=0.9\linewidth]{figs/ohlc.png}
-  \caption{}
+    \begin{subfigure}[b]{0.5\textwidth}
+      \includegraphics[height=3cm]{figs/ohlc.png}
+      \caption{Original rates and OHLC form}
+    \end{subfigure}
+    \quad\quad\quad\quad\quad\quad\quad
+    \begin{subfigure}[b]{0.2\textwidth}
+      \includegraphics[height=3cm]{figs/candle.png}
+      \caption{Candlestick}
+    \end{subfigure}
+    \caption{}
 \end{figure}
 
 \subsection{Prediction}
@@ -173,31 +182,28 @@ Algorithm for parameters selection:
 
 
 \subsubsection{Results}
-\begin{figure}[hp]
+\begin{figure}
   \centering
-  \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
-  \caption{}
+  \includegraphics[width=\textwidth,keepaspectratio]{figs/arima_1_1_18_open.png}
+  \caption{ARIMA(1,1,18) On Open price. RMSE=, MAPE=}
 \end{figure}
 
-%% TODO High
-\begin{figure}[hp]
+\begin{figure}
   \centering
-  \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
-  \caption{}
+  \includegraphics[width=\linewidth,keepaspectratio]{figs/arima_2_1_25_high.png}
+  \caption{ARIMA(2,1,25) On High price. RMSE=, MAPE=}
 \end{figure}
 
-%% TODO Close
-\begin{figure}[hp]
+\begin{figure}
   \centering
-  \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
-  \caption{}
+  \includegraphics[width=\linewidth,keepaspectratio]{figs/arima_26_1_1_low.png}
+  \caption{ARIMA(1,1,18) On Open price. RMSE=, MAPE=}
 \end{figure}
 
-%% TODO Low
-\begin{figure}[hp]
+\begin{figure}
   \centering
-  \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
-  \caption{}
+  \includegraphics[width=\linewidth,keepaspectratio]{figs/arima_1_1_18_close.png}
+  \caption{ARIMA(1,1,18) On Open price. RMSE=, MAPE=}
 \end{figure}
 
 \subsection{VAR(p)}
