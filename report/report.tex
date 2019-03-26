@@ -6,6 +6,7 @@
 \usepackage{graphicx}
 \usepackage{caption}
 \usepackage{subcaption}
+\usepackage{float}
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
@@ -94,7 +95,12 @@ ASK price) of EURUSD rates from 2010 to 2016, thus contains 245444 values. Time
 interval for OHLC value is uniformly set to 15 minutes. Janus also published a
 smaller sample subset of the dataset, which contains only 14880 values. We would
 use the sample dataset later for ARIMA parameter search to reduce computational
-effort.
+effort.\\
+We separate 245444 records into 3 sets: train set, validation set, test set. In
+our default configuration, 80\% of the dataset is trainset, 10\% is valid set,
+10\% test set.\\
+%% TODO graphics
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Model selection}
@@ -156,17 +162,28 @@ the models can be found at \cite{GVK483463442}.
 
 \subsection{ARIMA(p,d,q)}
 \subsubsection{Model description}
-\textit{ARIMA(p,d,q)} consists of three models: $AR(p)$, $MA(q)$ and integrated series of order d.\\
+\textit{ARIMA(p,d,q)} consists of three models: $AR(p)$, $MA(q)$ and integrated
+series of order d.\\ 
 A timeseries $\{x_t\}$ is a \textit{Auto-Regression} $AR(p)$ if it satisfies that
 $$
 x_t = \alpha_1x_{t-1} + \ldots + \alpha_{t-p}x_{t-p} + e_t 
 $$
-where $\{e_t\}$ is discrete white noises.\\
+where $\{e_t\}$ is discrete white noises. So, \textit{AR(p)} model looks back to
+find a linear relation with $p$ previous values. Normally, we use
+Autocorrelation Plot (ACF) of log difference to find $p$, which is the highest
+lag in which we find a significant autocorrelation.\\
+\\
 A timeseries $\{x_t\}$ is a \textit{Moving Average} $AR(p)$ if it satisfies that
 $$
 x_t = \alpha_1e_{t-1} + \ldots + \alpha_{t-p}e_{t-p} + e_t 
 $$
-where $\{e_t\}$ is discrete white noises.\\
+where $\{e_t\}$ is discrete white noises. Instead of looks back into values,
+\textit{MA(q)} looks into \textit{differences} between timesteps, assuming that
+the timeseries is a random walk (thus differences between timesteps are discrete
+white noises). To find parameter $q$, normally we look at the Partial
+Autocorrelation Plot (PACF) to find the lag in which autocorrelation start to
+decay.\\ The method to find the best tuple of $(p,d,q)$ based on AIC will
+be discussed later.\\
 
 
 \subsubsection{Parameters selection}
@@ -182,29 +199,46 @@ Algorithm for parameters selection:
 
 
 \subsubsection{Results}
-\begin{figure}
+These are results from parameters search and test prediction on Test set.
+
+\begin{table}[H]
+\begin{tabular}{|l|l|l|l|l|}
+\hline
+                 & Open        & High       & Low        & Close      \\ \hline
+P                & 1           & 2          & 1          & 1          \\ \hline
+D                & 1           & 1          & 1          & 1          \\ \hline
+Q                & 18          & 25         & 26         & 18         \\ \hline
+RMSE on Test set & 0.000377785 & 0.00035527 & 0.00036089 & 0.00037367 \\ \hline
+MAPE on Test set & 0.021241    & 0.019921   & 0.020236   & 0.021091   \\ \hline
+Overall error    & 0           & 0          & 0          & 0          \\ \hline
+\end{tabular}
+\caption{Optimal parameters and error on Test set}
+\end{table}
+
+\begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth,keepaspectratio]{figs/arima_1_1_18_open.png}
-  \caption{ARIMA(1,1,18) On Open price. RMSE=, MAPE=}
+  \caption{ARIMA(1,1,18) on Open price. RMSE=0.000377785, MAPE=0.021241}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth,keepaspectratio]{figs/arima_2_1_25_high.png}
-  \caption{ARIMA(2,1,25) On High price. RMSE=, MAPE=}
+  \caption{ARIMA(2,1,25) on High price. RMSE=0.00035527, MAPE=0.019921}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth,keepaspectratio]{figs/arima_26_1_1_low.png}
-  \caption{ARIMA(1,1,18) On Open price. RMSE=, MAPE=}
+  \caption{ARIMA(1,1,26) on Low price. RMSE=0.00036089, MAPE=0.020236}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth,keepaspectratio]{figs/arima_1_1_18_close.png}
-  \caption{ARIMA(1,1,18) On Open price. RMSE=, MAPE=}
+  \caption{ARIMA(1,1,18) on Close price. RMSE=0.00037367, MAPE=0.021091}
 \end{figure}
+
 
 \subsection{VAR(p)}
 \subsubsection{Model description}
@@ -216,28 +250,29 @@ of using a single value.
 Parameters selection for VAR consists only testing a range of lag with AIC. 
 
 \subsubsection{Results}
-\begin{figure}[hp]
+aaa
+\begin{figure}
   \centering
   \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
   \caption{}
 \end{figure}
 
 %% TODO High
-\begin{figure}[hp]
+\begin{figure}
   \centering
   \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
   \caption{}
 \end{figure}
 
 %% TODO Close
-\begin{figure}[hp]
+\begin{figure}
   \centering
   \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
   \caption{}
 \end{figure}
 
 %% TODO Low
-\begin{figure}[hp]
+\begin{figure}
   \centering
   \includegraphics[width=0.8\linewidth]{figs/arima_1_1_18_open.png}
   \caption{}
