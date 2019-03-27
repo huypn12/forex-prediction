@@ -334,8 +334,8 @@ models.
   Q                & 18          & 25         & 26         & 18         \\ \hline
   RMSE on Test set & 0.000377785 & 0.00035527 & 0.00036089 & 0.00037367 \\ \hline
   MAPE on Test set & 0.021241    & 0.019921   & 0.020236   & 0.021091   \\ \hline
-  Overall MAPE     & \multicolumn{4}{c|}{0.000367018}                          \\ \hline
-  Overall RMSE     & \multicolumn{4}{c|}{0.020622}                          \\ \hline
+  Overall MAPE     & \multicolumn{4}{c|}{0.000367018}                   \\ \hline
+  Overall RMSE     & \multicolumn{4}{c|}{0.020622}                      \\ \hline
 \end{tabular}
 \caption{Optimal parameters and error on Test set}
 \end{table}
@@ -409,13 +409,13 @@ between prediction and actual observation.
 \begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth,keepaspectratio]{figs/var20open100.png}
-  \caption{ARIMA(1,1,18) on Open price.}
+  \caption{VAR(20) on Open price.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth,keepaspectratio]{figs/var20high100.png}
-  \caption{ARIMA(2,1,25) on High price.}
+  \caption{VAR(20) on High price.}
 \end{figure}
 
 \begin{figure}[H]
@@ -433,8 +433,7 @@ between prediction and actual observation.
 \subsubsection{Results from LSTM}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 \section{Conclusion}
-As the results have shown, ...
-
+Summary of 
 However, computational effort spent for training LSTM deep learning model is
 much higher than ARIMA and VAR. Furthermore the, adding components to neural network
 topology results in higher computational cost. 
