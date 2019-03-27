@@ -13,7 +13,7 @@
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 
-\title{Foreign Exchange Rates forcasting with LSTM}
+\title{Foreign Exchange Rates prediction with LSTM}
 \author{Huy Phung, Tashi Choden, Sahil Pasricha
   \\University of Konstanz}
 \date{February 2019}
@@ -75,7 +75,7 @@ analysis.
       \includegraphics[height=3cm]{figs/candle.png}
       \caption{Candlestick}
     \end{subfigure}
-    \caption{}
+    \caption{Illustration of OHLC timeseries formatting.}
 \end{figure}
 
 \subsection{Prediction}
@@ -104,8 +104,8 @@ is valid set (2454 records), 10\% test set.\\
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Model selection}
-\subsubsection{Akaike Information Criterion (AIC)}
+\section{Model Selection and Evaluation}
+\subsection{Akaike Information Criterion (AIC)}
 Akaike Information Criterion (AIC) is basically log-likelihood, but it penalizes
 a model by the number of parameters. AIC is widely used in statistical model
 selection, not only ARIMA and VAR, but also Hidden Markov Model and so on.
@@ -116,7 +116,7 @@ in which $k$ is the number of parameters and $\hat{L}$ is the likelihood. Since
 the log-likelihood is multiplied by -1, lower AIC means the model fits better to
 the data.
 
-\subsubsection{Root Mean Squared Error (RMSE)}
+\subsection{Root Mean Squared Error (RMSE)}
 Root Mean Squared Error is widely used to measure the difference between values
 predicted by a model and the actually observed values. Given $y$ represents the
 actually observed values and $\hat{y}$ represents the values predicted, $RMSE$
@@ -129,7 +129,7 @@ the difference is negative or positive. However, since it does not take the
 range of possible values into account, it would be difficult to intepret the
 $RMSE$ result without knowing the possible range of predicted and actual values.
 
-\subsubsection{Mean Absolute Percentage Error (MAPE)}
+\subsection{Mean Absolute Percentage Error (MAPE)}
 In order to measure the difference between predicted values and actual values
 with regarding to the scale, we use Mean Absolute Percentage Error (MAPE)
 $$
@@ -178,29 +178,152 @@ A timeseries $\{x_t\}$ is a \textit{Moving Average} $AR(p)$ if it satisfies that
 $$
 x_t = \alpha_1e_{t-1} + \ldots + \alpha_{t-p}e_{t-p} + e_t 
 $$
-where $\{e_t\}$ is discrete white noises. Instead of looks back into values,
-\textit{MA(q)} looks into \textit{differences} between timesteps, assuming that
-the timeseries is a random walk (thus differences between timesteps are discrete
-white noises). To find parameter $q$, normally we look at the Partial
-Autocorrelation Plot (PACF) to find the lag in which autocorrelation start to
-decay.\\ The method to find the best tuple of $(p,d,q)$ based on AIC will
-be discussed later.\\
+where $\{e_t\}$ is discrete white noises. The coefficients $\alpha_i$ are
+estimated, for example with maximum likelihood, by a sample (in our case, train
+set) to Instead of looks back into values, \textit{MA(q)} looks into
+\textit{differences} between timesteps, assuming that the timeseries is a random
+walk (thus differences between timesteps are discrete white noises). To find
+parameter $q$, normally we look at the Partial Autocorrelation Plot (PACF) to
+find the lag in which autocorrelation start to decay.\\
+In the next section, we consider another method for parameters selection that
+would give us the optimal parameter set (p,d,q) at once.
 
 
 \subsubsection{Parameters selection}
-It is important for ARIMA model that we select the proper parameter
-$(p, d, q)$ so that it covers all the past values which has effect on the
-current value. In order to do so, we first look at survey the ACF and PACF plot.
-For ${AR}(p)$ model , we find the furthest lag with significant autocorrelation
-in ACF plot. For
-$MA(q)$, we find at which lag the autocorrelation start to decay.\\
 Another method is that we try all possible combination of $p$, $d$ and $q$ to
-find the combination which gives us the lowest AIC.
-Algorithm for parameters selection:
+find the combination which gives us the lowest AIC. This method is
+computationally heavy, since we have to estimate the model by a hundreds of
+thousands of datapoints. However, it guarantees that the result parameters is
+optimal, namely it maximizes the likelihood to the dataset.
+\begin{algorithm}[H]
+\caption{ARIMA(p,d,q) parameters select}\label{paramsselect1}
+\begin{algorithmic}[1]
+  \Procedure{Params Select}{$trainset, maxP, maxD, maxQ$}
+  \State $MinAIC$ $\gets$ $\infty$
+  \State $OptimalModel$ $\gets$ $None$
+  \For{$p=1$ to $maxP$}
+  \For{$d=0$ to $maxD$}
+  \For{$q=1$ to $maxQ$}
+  \State $Model$ $\gets$ $\texttt{ARIMA(p,d,q)}$
+  \State $EstModel$ $\gets$ Estimate coefficients $\alpha_i$ of $model$ by $trainset$
+  \If {$EstModel.AIC$ $<$ $MinAIC$}
+  \State $MinAIC$ $\gets$ $EstModel.AIC$
+  \State $OptimalModel$ $\gets$ $EstModel$
+  \EndIf
+  \EndFor
+  \EndFor
+  \EndFor
+  \State \textbf{return} $optimalModel$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+Running the algorithm on Trainset gives the following optimal parameters.
+\begin{table}[H]
+  \centering 
+\begin{tabular}{|l|l|l|l|l|}
+  \hline
+                   & Open        & High       & Low        & Close      \\ \hline
+  P                & 1           & 2          & 1          & 1          \\ \hline
+  D                & 1           & 1          & 1          & 1          \\ \hline
+  Q                & 18          & 25         & 26         & 18         \\ \hline
+  AIC              & -1.43336e+05   & -1.44620e+05  & 1.45923e+05 & -1.43399e+05    \\ \hline
+\end{tabular}
+\caption{Optimal parameters and AIC}
+\end{table}
+
+\subsection{VAR(p)}
+\subsubsection{Model description}
+VAR is applied to multivariate data. It is similar to $AR(p)$ model; however,
+instead of considering $\{x_t\}$ as real values (univariate), we analyse
+$\{\mathbf{x_t}\}$ as a timeseries of vectors $\mathbf{x_i}=(x_i^O, x_i^H, x_i^L, x_i^C)$. 
+Formally, a timeseries $\{\mathbf{x_t}\}$ in which $\mathbf{x_i}$ is a row
+vector of $n$ dimensions,
+is \textit{VAR(p)} if
+$$
+\mathbf{x_t}=\beta_1\mathbf{x_{t-1}} + \ldots \beta_p\mathbf{x_{t-p}} + e_t
+$$
+where $e_t$ is discrete white noises and $\beta_i$ is a column vector of $n$ dimensions.
+\subsubsection{Parameters selection}
+Parameters selection for VAR(p) is done in the same way as ARIMA(p,d,q): we loop
+through a set of possible parameters to find the one with lowest AIC.
+\begin{algorithm}[H]
+\caption{VAR(p) parameters select}\label{paramsselect2}
+\begin{algorithmic}[1]
+  \Procedure{Params Select}{$trainset, maxP$}
+  \State $MinAIC$ $\gets$ $\infty$
+  \State $OptimalModel$ $\gets$ $None$
+  \For{$p=1$ to $maxP$}
+  \State $model$ $\gets$ $\texttt{VAR(p)}$
+  \State Estimate coefficients of $model$ by $trainset$
+  \If {Estimated model has lower $AIC$}
+  \State $MinAIC$ $\gets$ $model.AIC$
+  \State $OptimalModel$ $\gets$ $model$
+  \EndIf
+  \EndFor
+  \State \textbf{return} $OptimalModel$
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+Running the algorithm on Trainset gives the following optimal parameters $P=20$
+with $AIC=-1.053747548995608e+07$
 
 
-\subsubsection{Results}
-These are results from parameters search and test prediction on Test set.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\section{Deep Learning Model}
+\subsection{Recurrent Neural Network}
+Recurrent Neural Network (RNN) is introduced by \cite{rumelhart1988learning} to
+process sequential input. In RNN, each state connects to the followed state to
+form a directed graph. The structure of RNN makes it capable of handling
+sequential data with temporal dynamic behaviour. RNN has been widely used in
+timeseries prediction and natural language processing.
+
+
+However, due to the nature of network topology, Hochreiter \cite{Hochreiter:91}
+showed that Recurrent Neural Network has \textit{vanishing gradient} and
+\textit{exploding gradient} problems. Let 
+
+\subsection{Long-Short Term Memory}
+Hochreiter and Schmidhuber (1997) \cite{gers1999learning} introduced Long-Short
+Term Memory neural network architecture architecture to solve both vanishing
+gradient and exploding gradient problem from RN
+
+\subsection{Proposed Network Topology}
+Our survey on the data implies that significant autocorrelation may appears even
+further than 20 timesteps into the past. In our proposed network topology, we
+
+add more hidden units into each LSTM layers, so that the network can learn from
+data points of higher lags.
+
+\subsection{Training}
+Training data for LSTM network must be prepared in a different way than for
+ARIMA or VAR. From the train set, we make 2
+%% TODO: graphics 
+We train the model by optimizer \textit{adam}, with batch size 32. Other
+parameters can be found in the source code. As we can see from training progress, after the second epoch, the loss does not
+decrease any more, meanwhile the 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+
+\section{Experiments}
+\subsection{Description}
+We consider using LSTM network in two experiments. In the first experiments, we
+build and train the network to predict future values only by giving to history
+lags of one timeseries \textit{(univariate)}. For example, we train the network to
+predict one Open price value in the future given only the Open prices in the
+past. This experiment is designed to compare the performance of LSTM with
+$ARIMA(p, d, q)$ model.\\ 
+In the second experiments, we build and train the network so that it would
+predict one values ahead of one feature (e.g. one value of Open price ahead),
+given history values of \textit{all} features in the past. This experiment is
+designed to compare the performance of LSTM to $VAR(p)$ model.\\
+In both experiments, since we want to predict the future values of all Open,
+High, Low and Close features, we have to build and train one mode for each
+feature accordingly. Therefore, in each experiment we have to build and train 4
+models.
+
+\subsection{Univariate Experiment}
+\subsubsection{Results from ARIMA(p,d,q)}
 
 \begin{table}[H]
 \begin{tabular}{|l|l|l|l|l|}
@@ -241,22 +364,10 @@ These following figures are the visualization of results.
   \caption{ARIMA(1,1,18) on Close price.}
 \end{figure}
 
+\subsubsection{Results from LSTM}
 
-\subsection{VAR(p)}
-\subsubsection{Model description}
-VAR is applied to multivariate data. It is similar to $AR(p)$ model; however,
-instead of considering $\{x_t\}$ as real values (univariate), we analyse
-$\{\mathbf{x_t}\}$ as a timeseries of vectors $\mathbf{x_i}=(x_i^O, x_i^H, x_i^L, x_i^C)$. 
-
-\subsubsection{Parameters selection}
-Parameters selection for VAR consists only testing a range of lag with AIC. 
-
-\subsubsection{Results}
-Parameters selection algorithm gives the optimal parameter $P$ is 20 for the
-train set. Since \textit{VAR(20)} fits the test set very well, for
-visualization, we draw an additional plot for values 500-600 to highlights the
-minute differences between prediction and actual observation.
-
+\subsection{Multivariate}
+\subsubsection{Results from VAR(p)}
 \begin{table}[H]
 \begin{tabular}{|l|l|l|l|l|}
   \hline
@@ -288,63 +399,38 @@ minute differences between prediction and actual observation.
       \includegraphics[width=\textwidth,keepaspectratio]{figs/var20close.png}
       \caption{Close}
     \end{subfigure}
-    \caption{}
+    \caption{Prediction on Test set.}
 \end{figure}
 
+Since \textit{VAR(20)} fits the test set very well, for visualization, we draw
+an additional plot for values 500-600 to highlights the minute differences
+between prediction and actual observation. 
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{figs/var20open100.png}
+  \caption{ARIMA(1,1,18) on Open price.}
+\end{figure}
 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,keepaspectratio]{figs/var20high100.png}
+  \caption{ARIMA(2,1,25) on High price.}
+\end{figure}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,keepaspectratio]{figs/var20low100.png}
+  \caption{ARIMA(1,1,26) on Low price.}
+\end{figure}
 
-\section{Deep Learning Model}
-\subsection{Recurrent Neural Network}
-Recurrent Neural Network (RNN) is introduced by \cite{rumelhart1988learning} to
-process sequential input. In RNN, each state connects to the followed state to
-form a directed graph. The structure of RNN makes it capable of handling
-sequential data with temporal dynamic behaviour.
-%% TODO graphics
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,keepaspectratio]{figs/var20close100.png}
+  \caption{ARIMA(1,1,18) on Close price.}
+\end{figure}
 
-Challenges in Recurrent Neural Network are \textit{vanishing gradient} and
-\textit{exploding gradient}.
-
-\subsection{Long-Short Term Memory}
-Hochreiter and Schmidhuber (1997) \cite{gers1999learning} introduced Long-Short
-Term Memory neural network architecture architecture to solve both vanishing
-gradient and exploding gradient problem from RNN Cummins presented
-
-\subsection{Proposed Network Topology}
-Our survey on the data implies that significant autocorrelation may appears even
-further than 20 timesteps into the past. In our proposed network topology, we
-
-add more hidden units into each LSTM layers, so that the network can learn from
-data points of higher lags.
-
-\subsection{Experiments}
-We consider using LSTM network in two experiments. In the first experiments, we
-build and train the network to predict future values only by giving to history
-lags of one timeseries \textit{(univariate)}. For example, we train the network to
-predict one Open price value in the future given only the Open prices in the
-past. This experiment is designed to compare the performance of LSTM with
-$ARIMA(p, d, q)$ model.\\ 
-In the second experiments, we build and train the network so that it would
-predict one values ahead of one feature (e.g. one value of Open price ahead),
-given history values of \textit{all} features in the past. This experiment is
-designed to compare the performance of LSTM to $VAR(p)$ model.\\
-In both experiments, since we want to predict the future values of all Open,
-High, Low and Close features, we have to build and train one mode for each
-feature accordingly. Therefore, in each experiment we have to build and train 4
-models.
-
-\subsection{Training}
-As we can see from training progress, after the second epoch, the loss does not
-decrease any more, meanwhile the 
-\subsection{Results}
-
-\subsubsection{Univariate}
-
-\subsubsection{Multivariate}
-
-
+\subsubsection{Results from LSTM}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 \section{Conclusion}
 As the results have shown, ...
