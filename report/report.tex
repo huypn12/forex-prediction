@@ -84,9 +84,9 @@ Close prices. Other features, either originally exists (volume) or later added
 (mean, median, momentum), are only considered as supporting features. These
 features are only used for prediction of OHLC features.\\
 The problem we are trying to solve in this project is declared as follow: given
-history data in OHLC form of Forex rates, namely $x_0, x_1,\ldots,x_k$ where
-$x_i=(x^O_i, x^H_i, x^L_i, x^C_i )$, predict future rate of \textit{one} step
-ahead, $x_{k+1}$. 
+history data in OHLC form of Forex rates, namely $\mathbf{x_0},
+\mathbf{x_1},\ldots,\mathbf{x_k}$ where $\mathbf{x_i}=(x^O_i, x^H_i, x^L_i, x^C_i )$,
+predict future rate of \textit{one} step ahead, $\mathbf{x_{k+1}}$. 
 
 \subsection{Dataset}
 Acquiring real-time data is expensive, due to the fact that most FIX data
@@ -143,22 +143,22 @@ loss function here.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Statistical Models}
-\subsection{Basic of Time series.}
+\subsection{Autocorrelation and White noises}
 Let $\{x_t\}$ is a timeseries with $\mu=\mu(t)$ is its mean and
 $\sigma=\sigma(t)$ is its variance. \textbf{Autocovariance} of lag $k$ is
 defined as $C_k=E[(x_t-\mu)(x_{t+k}-\mu)]$ and \textbf{autocorrelation} is
 defined
 as $\rho_k=\frac{C_k}{\sigma^2}$.\\
-A time series $\{e_t\}$ is a \textit{discrete white noises} if its elements
+A time series $\{e_t\}$ is a \textbf{discrete white noises} if its elements
 $e_i$ are independent, identically distributed, have mean equals to zero and no
 autocorrelation between any of its values. Formally,
 $\mu_{\{e_t\}}=\mu_{\{e_t\}}(t)=0$,
 $Cor(e_i,e_j)\neq 0, \forall i \neq j$.\\
-A time series $\{x_t\}$ is a \textit{random walk} if it satisfies that
+A time series $\{x_t\}$ is a \textbf{random walk} if it satisfies that
 $x_t=x_{t-1}+e_t$ where $\{e_t\}$ is a discrete white noise as described above.\\
 The following models we consider are similar to linear regression to some
 extents. Their rationales is that we find a linear relation between the
-value at time $t$ and certain \textit{lags} before it . Detailed explanation of
+value at time $t$ and certain \textbf{lags} before it . Detailed explanation of
 the models can be found at \cite{GVK483463442} and \cite{quantstart}.
 
 \subsection{ARIMA(p,d,q)}
@@ -225,7 +225,10 @@ optimal, namely it maximizes the likelihood to the dataset.
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
-Running the algorithm on Trainset gives the following optimal parameters.
+From the ACF and PCAF plot we can observe that after 20 lags, history values has
+no significant correlation to current value. Set $maxP$ and $maxQ$ to 25 and
+assume stationary on first order difference, the algorithm gives the following
+optimal parameters on trainset.
 \begin{table}[H]
   \centering 
 \begin{tabular}{|l|l|l|l|l|}
@@ -236,7 +239,7 @@ Running the algorithm on Trainset gives the following optimal parameters.
   Q                & 18          & 25         & 26         & 18         \\ \hline
   AIC              & -1.43336e+05   & -1.44620e+05  & 1.45923e+05 & -1.43399e+05    \\ \hline
 \end{tabular}
-\caption{Optimal parameters and AIC}
+\caption{ARIMA(p,d,q) optimal parameters and AIC}
 \end{table}
 
 \subsection{VAR(p)}
@@ -245,8 +248,7 @@ VAR is applied to multivariate data. It is similar to $AR(p)$ model; however,
 instead of considering $\{x_t\}$ as real values (univariate), we analyse
 $\{\mathbf{x_t}\}$ as a timeseries of vectors $\mathbf{x_i}=(x_i^O, x_i^H, x_i^L, x_i^C)$. 
 Formally, a timeseries $\{\mathbf{x_t}\}$ in which $\mathbf{x_i}$ is a row
-vector of $n$ dimensions,
-is \textit{VAR(p)} if
+vector of $n$ dimensions, is \textit{VAR(p)} if
 $$
 \mathbf{x_t}=\beta_1\mathbf{x_{t-1}} + \ldots \beta_p\mathbf{x_{t-p}} + e_t
 $$
@@ -272,8 +274,9 @@ through a set of possible parameters to find the one with lowest AIC.
 \EndProcedure
 \end{algorithmic}
 \end{algorithm}
-Running the algorithm on Trainset gives the following optimal parameters $P=20$
-with $AIC=-1.053747548995608e+07$
+Set $maxP$ to 25 with the same reason as \textit{ARIMA(p,d,q)}. The algorithm
+returns optimal parameter $P=20$ for train set with
+$AIC=-1.053747548995608e+07$. 
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
@@ -281,16 +284,14 @@ with $AIC=-1.053747548995608e+07$
 \section{Deep Learning Model}
 \subsection{Recurrent Neural Network}
 Recurrent Neural Network (RNN) is introduced by \cite{rumelhart1988learning} to
-process sequential input. In RNN, each state connects to the followed state to
-form a directed graph. The structure of RNN makes it capable of handling
-sequential data with temporal dynamic behaviour. RNN has been widely used in
-timeseries prediction and natural language processing.
+process sequential input. RNN has been widely used in timeseries prediction and
+natural language processing. In RNN, each state connects to the followed state
+to form a directed graph. The structure of RNN makes it capable of handling
+sequential data with temporal dynamic behaviour.
 
-
-However, due  showed that Recurrent Neural Network has
-\textit{vanishing gradient} and \textit{exploding gradient} problems. These
-problems come from the topology of RNN, in which the layers were added
-consecutively.
+However, due showed that Recurrent Neural Network has \textit{vanishing
+  gradient} and \textit{exploding gradient} problems. These problems come from
+the topology of RNN, in which the layers were added consecutively.
 
 
 \subsection{Long-Short Term Memory}
@@ -301,7 +302,6 @@ gradient and exploding gradient problem from RNN
 \subsection{Proposed Network Topology}
 Our survey on the data implies that significant autocorrelation may appears even
 further than 20 timesteps into the past. In our proposed network topology, we
-
 add more hidden units into each LSTM layers, so that the network can learn from
 data points of higher lags.
 
@@ -336,6 +336,7 @@ models.
 \subsubsection{Results from ARIMA(p,d,q)}
 
 \begin{table}[H]
+  \centering
 \begin{tabular}{|l|l|l|l|l|}
   \hline
   & Open        & High       & Low        & Close      \\ \hline
@@ -376,18 +377,58 @@ These following figures are the visualization of results.
 
 \subsubsection{Results from LSTM}
 
+\begin{table}[H]
+  \centering
+\begin{tabular}{|l|l|l|l|l|}
+  \hline
+  Univariate       & Open        & High       & Low        & Close      \\ \hline
+  RMSE on Test set & 0.075301    & 0.024839   & 0.052389   & 0.048788   \\ \hline
+  MAPE on Test set & 5.9546      & 1.8086     & 4.2258     & 3.7145     \\ \hline
+  Overall MAPE     & \multicolumn{4}{c|}{0.053414}                      \\ \hline
+  Overall RMSE     & \multicolumn{4}{c|}{3.925875}                      \\ \hline
+\end{tabular}
+\caption{Optimal parameters and error on Test set}
+\end{table}
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{figs/lstm_uni_open.png}
+  \caption{LSTM Univariate on Open price.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,keepaspectratio]{figs/lstm_uni_high.png}
+  \caption{LSTM Univariate on High price.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,keepaspectratio]{figs/lstm_uni_low.png}
+  \caption{LSTM Univariate on Low price.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,keepaspectratio]{figs/lstm_uni_close.png}
+  \caption{LSTM Univariate on Close price.}
+\end{figure}
+
+
 \subsection{Multivariate}
 \subsubsection{Results from VAR(p)}
 \begin{table}[H]
+  \centering
 \begin{tabular}{|l|l|l|l|l|}
   \hline
   P=20             & Open        & High       & Low        & Close      \\ \hline
   RMSE on Test set & 0.000095771 & 0.00039002 & 0.00037809 & 0.00053147 \\ \hline
   MAPE on Test set & 0.00097803  & 0.020309   & 0.019355   & 0.027689   \\ \hline
-  Overall MAPE     & \multicolumn{4}{c|}{0.0003829817534299121}                   \\ \hline
-  Overall RMSE     & \multicolumn{4}{c|}{0.0170827575}                      \\ \hline
+  Overall MAPE     & \multicolumn{4}{c|}{0.0003829817534299121}         \\ \hline
+  Overall RMSE     & \multicolumn{4}{c|}{0.0170827575}                  \\ \hline
 \end{tabular}
-\caption{Optimal parameters and error on Test set}
+\caption{Optimal parameters and error on Test set of VAR(20)}
 \end{table}
 
 \begin{figure}[H]
@@ -431,24 +472,78 @@ between prediction and actual observation.
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth,keepaspectratio]{figs/var20low100.png}
-  \caption{ARIMA(1,1,26) on Low price.}
+  \caption{VAR(20) on Low price.}
 \end{figure}
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\linewidth,keepaspectratio]{figs/var20close100.png}
-  \caption{ARIMA(1,1,18) on Close price.}
+  \caption{VAR(20) on Close price.}
 \end{figure}
 
 \subsubsection{Results from LSTM}
+
+\begin{table}[H]
+  \centering
+\begin{tabular}{|l|l|l|l|l|}
+  \hline
+                   & Open        & High       & Low        & Close      \\ \hline
+  RMSE on Test set & 1.4085      & 1.376      & 1.3852     & 1.3818     \\ \hline
+  MAPE on Test set & 55.8928     & 54.7415    & 53.1869    & 54.1241    \\ \hline
+  Overall MAPE     & \multicolumn{4}{c|}{1.38792}         \\ \hline
+  Overall RMSE     & \multicolumn{4}{c|}{54.48633}        \\ \hline
+\end{tabular}
+\caption{LSTM Multivariate error on Test set.}
+\end{table}
+
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{figs/lstm_multi_open.png}
+  \caption{LSTM Multivariate on Open price.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,keepaspectratio]{figs/lstm_multi_high.png}
+  \caption{LSTM Multivariate on High price.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,keepaspectratio]{figs/lstm_multi_low.png}
+  \caption{LSTM Multivariate on Low price.}
+\end{figure}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\linewidth,keepaspectratio]{figs/lstm_multi_close.png}
+  \caption{LSTM Multivariate on Close price.}
+\end{figure}
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 \section{Conclusion}
-Summary of 
-However, computational effort spent for training LSTM deep learning model is
-much higher than ARIMA and VAR. Furthermore the, adding components to neural network
-topology results in higher computational cost. 
-
-\pagebreak
+According to the result, ARIMA and VAR deliver much better performance than LSTM
+neural network. More importantly, ARIMA and VAR is mathematically transparent
+and explanable.\\
+However, the statistical models also have drawbacks. First, due to the fact that
+all of them uses likelihood estimator to estimate the coefficients by the
+trainset, these models are prone to overfit. The more parameters a model has,
+the more likely to be overfit. That is the reason why we used AIC, for it
+penalizes the number of parameters. Second, ARIMA and VAR depends on the assumption
+that the relation between the value at current timesteps and its lags is linear.
+However, it can be assumed that more complicated functions are needed to reflect
+that relation.\\
+In our project, the accuracy from LSTM models does not match that of statistical
+models. However, LSTM is still promising due to the fact that it can simulate
+any complicated functions, in compare with the statistical models which relies
+on linear functions. Furthermore, Dave Y. Kim and Mahmoud Elsaftawy
+\cite{kimy07lstm} shows that for the same problem, use a different LSTM topology
+and training strategy, LSTM based model could achive RMSE 0.00029617
+and MAPE of 0.021310060616307612, which is similar to our results achieved by
+statistical models ARIMA and VAR.
+\pagebreak 
 \bibliographystyle{plain}
 \bibliography{report}
 
