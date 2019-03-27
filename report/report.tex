@@ -185,9 +185,17 @@ set) to Instead of looks back into values, \textit{MA(q)} looks into
 walk (thus differences between timesteps are discrete white noises). To find
 parameter $q$, normally we look at the Partial Autocorrelation Plot (PACF) to
 find the lag in which autocorrelation start to decay.\\
-In the next section, we consider another method for parameters selection that
-would give us the optimal parameter set (p,d,q) at once.
+It is not necessarily true that  we receive a discrete white noises by first
+order difference, namely $x_t - x_{t-1}=e_t$ and $\{e_t\}$ is discrete white
+noise. We possible need to take $d$ times of differencing to get discrete white
+noises, namely $(x_t-x_{t-1})-(x_{t-1}-x_{t-2})-\ldots-(x_{t-d+1}-x_{t-d})=e_t$.
+Let $d$ be the order of difference, we have the component $I(d)$ in
+$ARIMA(p,d,q)$.\\ 
 
+It is important that we select the proper parameters $(p,d,q)$ that covers all
+the lags which affects the current value. In the next section, we consider
+another method for parameters selection that would give us the optimal parameter
+set (p,d,q) at once.
 
 \subsubsection{Parameters selection}
 Another method is that we try all possible combination of $p$, $d$ and $q$ to
@@ -279,14 +287,16 @@ sequential data with temporal dynamic behaviour. RNN has been widely used in
 timeseries prediction and natural language processing.
 
 
-However, due to the nature of network topology, Hochreiter \cite{Hochreiter:91}
-showed that Recurrent Neural Network has \textit{vanishing gradient} and
-\textit{exploding gradient} problems. Let 
+However, due  showed that Recurrent Neural Network has
+\textit{vanishing gradient} and \textit{exploding gradient} problems. These
+problems come from the topology of RNN, in which the layers were added
+consecutively.
+
 
 \subsection{Long-Short Term Memory}
 Hochreiter and Schmidhuber (1997) \cite{gers1999learning} introduced Long-Short
 Term Memory neural network architecture architecture to solve both vanishing
-gradient and exploding gradient problem from RN
+gradient and exploding gradient problem from RNN
 
 \subsection{Proposed Network Topology}
 Our survey on the data implies that significant autocorrelation may appears even
