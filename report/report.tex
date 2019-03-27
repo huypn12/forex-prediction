@@ -158,7 +158,7 @@ $x_t=x_{t-1}+e_t$ where $\{e_t\}$ is a discrete white noise as described above.\
 The following models we consider are similar to linear regression to some
 extents. Their rationales is that we find a linear relation between the
 value at time $t$ and certain \textit{lags} before it . Detailed explanation of
-the models can be found at \cite{GVK483463442}.
+the models can be found at \cite{GVK483463442} and \cite{quantstart}.
 
 \subsection{ARIMA(p,d,q)}
 \subsubsection{Model description}
@@ -203,18 +203,19 @@ These are results from parameters search and test prediction on Test set.
 
 \begin{table}[H]
 \begin{tabular}{|l|l|l|l|l|}
-\hline
-                 & Open        & High       & Low        & Close      \\ \hline
-P                & 1           & 2          & 1          & 1          \\ \hline
-D                & 1           & 1          & 1          & 1          \\ \hline
-Q                & 18          & 25         & 26         & 18         \\ \hline
-RMSE on Test set & 0.000377785 & 0.00035527 & 0.00036089 & 0.00037367 \\ \hline
-MAPE on Test set & 0.021241    & 0.019921   & 0.020236   & 0.021091   \\ \hline
-Overall error    & 0           & 0          & 0          & 0          \\ \hline
+  \hline
+  & Open        & High       & Low        & Close      \\ \hline
+  P                & 1           & 2          & 1          & 1          \\ \hline
+  D                & 1           & 1          & 1          & 1          \\ \hline
+  Q                & 18          & 25         & 26         & 18         \\ \hline
+  RMSE on Test set & 0.000377785 & 0.00035527 & 0.00036089 & 0.00037367 \\ \hline
+  MAPE on Test set & 0.021241    & 0.019921   & 0.020236   & 0.021091   \\ \hline
+  Overall MAPE     & 00                                                 \\ \hline
+  Overall RMSE     & 0                                                  \\ \hline
 \end{tabular}
 \caption{Optimal parameters and error on Test set}
 \end{table}
-
+These following figures are the visualization of results.
 \begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth,keepaspectratio]{figs/arima_1_1_18_open.png}
@@ -242,9 +243,8 @@ Overall error    & 0           & 0          & 0          & 0          \\ \hline
 
 \subsection{VAR(p)}
 \subsubsection{Model description}
-VAR is applied to multivariate data. It is similar to $AR(p)$ model. However we
-apply the model for a vector ${\mathbb{x_t}}$ of multivariate timeseries instead
-of using a single value.
+VAR is applied to multivariate data. It is similar to $AR(p)$ model; however, at
+each time
 
 \subsubsection{Parameters selection}
 Parameters selection for VAR consists only testing a range of lag with AIC. 
@@ -310,7 +310,7 @@ We consider using LSTM network in two experiments. In the first experiments, we
 build and train the network to predict future values only by giving to history
 lags of one timeseries \textit{(univariate)}. For example, we train the network to
 predict one Open price value in the future given only the Open prices in the
-past. This experiments is designed to compare the performance of LSTM with
+past. This experiment is designed to compare the performance of LSTM with
 $ARIMA(p, d, q)$ model.\\ 
 In the second experiments, we build and train the network so that it would
 predict one values ahead of one feature (e.g. one value of Open price ahead),
