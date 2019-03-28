@@ -31,7 +31,7 @@
 Foreign Exchange (abbreviation \textit{Forex} or simply \textit{FX}) Market is
 the decentralized market for currency investment. Forex market is the second
 most important market, after stock market. Supply and demand in the market
-determine Forex rate, in which a pair of currency can be exchanged. Forex Rates
+determine Forex rate, in which a pair of currency can be exchanged. Forex rates
 has been studied in econometrics as a financial timeseries. The purpose of
 studying Forex rates is to explain the market behaviour or forecast future
 prices.\\
@@ -100,7 +100,15 @@ effort.\\
 We separate 245444 records into 3 sets: train set, validation set, test set. In
 our default configuration, 80\% of the dataset is trainset (19636 records), 10\%
 is valid set (2454 records), 10\% test set.\\
-
+For better modelling and prediction, we add the following features to the
+original dataset:
+\begin{itemize}
+\item Median Price = (High Price + Low Price) / 2
+\item Mean Price = (High Price + Low Price + Open Price + Close Price) / 4
+\item Momentum = Volume * (Open Price - Close Price)
+\end{itemize}
+However, these additional features are used only \textit{for} prediction. We do
+not build any model to predict these new features.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -288,30 +296,88 @@ process sequential input. In RNN, each state connects to the following state
 to form a directed graph. The structure of RNN makes it capable of handling
 sequential data with temporal dynamic behaviour, such as timeseries or natural
 language 
-%% TODO figure 
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{figs/rnn.png}
+  \caption{Recurrent Neural Network topology.}
+\end{figure}
 However, Pascanu \cite{pascanu2013difficulty} shows that Recurrent Neural
 Network has \textit{vanishing gradient} and \textit{exploding gradient}
 problems. These problems come from the topology of RNN, in which the layers were
-added consecutively. The gradient is calculated as follow:
+added consecutively. Let $E_k$ be the error at $k$-th Recurrent unit. The
+gradient of $E_k$ is calculated by chain rules over $k$ timesteps:
 $$
+\frac{\partial E_k}{\partial W_{rec}} = \sum_{i=0}^k
+\frac{\partial E_k}{\partial y_k} \frac{\partial y_k}{\partial h_k}
+\frac{\partial h_k}{\partial h_i} \frac{\partial h_i}{\partial W_{rec}} 
 $$
-When $W_{rec}<1$,  
-
+Apply chain rules again on $\frac{\partial h_k}{\partial h_i}$, we have:
+$$
+\frac{\partial h_k}{\partial h_i} = \prod_{t=i}^{k-1}\frac{\partial
+  h_{t+1}}{\partial h_t} = \prod_{k\geq i > 1} \mathbf{W}_{rec}^T
+\mathit{diag}(\sigma^{\prime} (x_{i-1})) 
+$$
+When $W_{rec}<1$, the product decrease exponentially fast (vanishing gradient);
+when $W_{rec}>1$, the product increase exponentially fast (exploding gradient).
 \subsection{Long-Short Term Memory}
 Hochreiter and Schmidhuber (1997) \cite{gers1999learning} introduced Long-Short
 Term Memory neural network architecture architecture to solve both vanishing
-gradient and exploding gradient problem from RNN
+gradient and exploding gradient problem from RNN. LSTM introduces in each unit a
+memory cell, and a forget gate, so the past memory can be forgotten and thus
+does not affect the learning.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{figs/lstm.png}
+  \caption{A LSTM hidden unit \textit{source: colab.github.com}}
+\end{figure}
 
 \subsection{Proposed Network Topology}
-Our proposed topology consists of 
+We propose a network topology, which consists of 3 stacked LSTM layer of
+sequential output, with a dropout layer to tackle overfitting problem.
+\begin{table}[H]
+  \centering
+  \begin{tabular}{|c|}
+    \hline
+Sequence Input Layer           \\ \hline
+LSTM Layer of 125 hidden units \\ \hline
+LSTM Layer of 125 hidden units \\ \hline
+Fully Connected Layer          \\ \hline
+Dropout Layer of 0.1           \\ \hline
+LSTM Layer of 125 hidden units \\ \hline
+Regression Layer               \\ \hline
+\end{tabular}
+\caption{Proposed LSTM Network topology}
+\end{table}
+
 
 \subsection{Training}
 Training data for LSTM network must be prepared in a different way than for
-ARIMA or VAR. From the train set, we make 2
-%% TODO: graphics 
+ARIMA or VAR. Standardization of the training data before feeding it into LSTM
+network is necessary, since the scale differences among features would
+deteriorate the training process. Feeding the whole timeseries from the
+beginning to the network in order to predict the next value is ineffective,
+since we have observed before that autocorrelation decays and is negiligible
+after 25-th lag. Therefore, we partition (fold) the trainset into samples of 25
+consecutives timesteps. The rationale of training is that: \textit{given
+  $\mathbf{x_i}$ at last 25 timesteps, we want to observe the next $y_i$}
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{figs/train_cut.png}
+  \caption{Train set folding.}
+\end{figure}
+
+
 We train the model by optimizer \textit{adam}, with batch size 32. Other
-parameters can be found in the source code. As we can see from training progress, after the second epoch, the loss does not
-decrease any more, meanwhile the 
+parameters can be found in the source code. As we can see from training
+progress, after the second epoch, the loss does not decrease any more, meanwhile
+the RMSE error still has the same distribution. It may imply that we could stop
+the training process at 3rd epoch without the loss of accuracy.
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,keepaspectratio]{figs/training_lstm.png}
+  \caption{Training progress of LSTM on Open prices.}
+\end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
@@ -402,6 +468,8 @@ order to see the difference easier.
 \caption{Optimal parameters and error on Test set}
 \end{table}
 
+Visualization of prediction result. With LSTM, the difference is obviously visible.
+
 \begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth,keepaspectratio]{figs/lstm_uni_open.png}
@@ -491,6 +559,7 @@ actual observation.
 \caption{LSTM Multivariate error on Test set.}
 \end{table}
 
+Visualization of prediction result. With LSTM, the difference is obviously visible.
 
 \begin{figure}[H]
   \centering
@@ -529,7 +598,8 @@ the more likely to be overfit. That is the reason why we used AIC, for it
 penalizes the number of parameters. Second, ARIMA and VAR depends on the assumption
 that the relation between the value at current timesteps and its lags is linear.
 However, it can be assumed that more complicated functions are needed to reflect
-that relation.\\
+that relation. Third, the process of finding optimal parameters for statistical
+models could take even longer time than training a LSTM model.\\
 In our project, the accuracy from LSTM models does not match that of statistical
 models. However, LSTM is still promising due to the fact that it can simulate
 any complicated functions, in compare with the statistical models which relies
