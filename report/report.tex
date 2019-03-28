@@ -328,7 +328,7 @@ does not affect the learning.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth,keepaspectratio]{figs/lstm.png}
+  \includegraphics[width=0.5\textwidth,keepaspectratio]{figs/lstm.png}
   \caption{A LSTM hidden unit \textit{source: colab.github.com}}
 \end{figure}
 
@@ -359,8 +359,8 @@ deteriorate the training process. Feeding the whole timeseries from the
 beginning to the network in order to predict the next value is ineffective,
 since we have observed before that autocorrelation decays and is negiligible
 after 25-th lag. Therefore, we partition (fold) the trainset into samples of 25
-consecutives timesteps. The rationale of training is that: \textit{given
-  $\mathbf{x_i}$ at last 25 timesteps, we want to observe the next $y_i$}
+consecutives timesteps as $X$ set, and use the observation right after that
+sample tobe the $Y$ set.
 \begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth,keepaspectratio]{figs/train_cut.png}
@@ -385,13 +385,14 @@ the training process at 3rd epoch without the loss of accuracy.
 \subsection{Experiment design}
 We consider using LSTM network in two experiments. In the first experiments, we
 build and train the network to predict future values only by giving to history
-lags of one timeseries \textit{(univariate)}. For example, we train the network to
-predict one Open price value in the future given only the Open prices in the
+lags of one timeseries \textbf{(univariate)}. For example, we train the network
+to predict one Open price value in the future given only the Open prices in the
 past. This experiment is designed to compare the performance of LSTM with
-$ARIMA(p, d, q)$ model.\\ 
+$ARIMA(p, d, q)$ model.\\
 In the second experiments, we build and train the network so that it would
 predict one values ahead of one feature (e.g. one value of Open price ahead),
-given history values of \textit{all} features in the past. This experiment is
+given history values of \textit{all} features in the past
+\textbf{(multivariate)}. This experiment is
 designed to compare the performance of LSTM to $VAR(p)$ model.\\
 In both experiments, since we want to predict the future values of all Open,
 High, Low and Close features, we have to build and train one mode for each
