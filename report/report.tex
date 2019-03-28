@@ -284,15 +284,18 @@ $AIC=-1.053747548995608e+07$.
 \section{Deep Learning Model}
 \subsection{Recurrent Neural Network}
 Recurrent Neural Network (RNN) is introduced by \cite{rumelhart1988learning} to
-process sequential input. RNN has been widely used in timeseries prediction and
-natural language processing. In RNN, each state connects to the followed state
+process sequential input. In RNN, each state connects to the following state
 to form a directed graph. The structure of RNN makes it capable of handling
-sequential data with temporal dynamic behaviour.
-
-However, due showed that Recurrent Neural Network has \textit{vanishing
-  gradient} and \textit{exploding gradient} problems. These problems come from
-the topology of RNN, in which the layers were added consecutively.
-
+sequential data with temporal dynamic behaviour, such as timeseries or natural
+language 
+%% TODO figure 
+However, Pascanu \cite{pascanu2013difficulty} shows that Recurrent Neural
+Network has \textit{vanishing gradient} and \textit{exploding gradient}
+problems. These problems come from the topology of RNN, in which the layers were
+added consecutively. The gradient is calculated as follow:
+$$
+$$
+When $W_{rec}<1$,  
 
 \subsection{Long-Short Term Memory}
 Hochreiter and Schmidhuber (1997) \cite{gers1999learning} introduced Long-Short
@@ -300,10 +303,7 @@ Term Memory neural network architecture architecture to solve both vanishing
 gradient and exploding gradient problem from RNN
 
 \subsection{Proposed Network Topology}
-Our survey on the data implies that significant autocorrelation may appears even
-further than 20 timesteps into the past. In our proposed network topology, we
-add more hidden units into each LSTM layers, so that the network can learn from
-data points of higher lags.
+Our proposed topology consists of 
 
 \subsection{Training}
 Training data for LSTM network must be prepared in a different way than for
@@ -343,10 +343,10 @@ models.
   P                & 1           & 2          & 1          & 1          \\ \hline
   D                & 1           & 1          & 1          & 1          \\ \hline
   Q                & 18          & 25         & 26         & 18         \\ \hline
-  RMSE on Test set & 0.000377785 & 0.00035527 & 0.00036089 & 0.00037367 \\ \hline
-  MAPE on Test set & 0.021241    & 0.019921   & 0.020236   & 0.021091   \\ \hline
-  Overall MAPE     & \multicolumn{4}{c|}{0.000367018}                   \\ \hline
-  Overall RMSE     & \multicolumn{4}{c|}{0.020622}                      \\ \hline
+  RMSE on Test set & 0.00053488  & 0.00051806 & 0.00052238 & 0.00053157 \\ \hline
+  MAPE on Test set & 0.027884    & 0.0263     & 0.026312   & 0.027741   \\ \hline
+  Overall MAPE     & \multicolumn{4}{c|}{0.0005268}                   \\ \hline
+  Overall RMSE     & \multicolumn{4}{c|}{0.0270593}                      \\ \hline
 \end{tabular}
 \caption{Optimal parameters and error on Test set}
 \end{table}
