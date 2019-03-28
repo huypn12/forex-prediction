@@ -345,35 +345,47 @@ models.
   Q                & 18          & 25         & 26         & 18         \\ \hline
   RMSE on Test set & 0.00053488  & 0.00051806 & 0.00052238 & 0.00053157 \\ \hline
   MAPE on Test set & 0.027884    & 0.0263     & 0.026312   & 0.027741   \\ \hline
-  Overall MAPE     & \multicolumn{4}{c|}{0.0005268}                   \\ \hline
-  Overall RMSE     & \multicolumn{4}{c|}{0.0270593}                      \\ \hline
+  Overall MAPE     & \multicolumn{4}{c|}{0.0005268}                     \\ \hline
+  Overall RMSE     & \multicolumn{4}{c|}{0.0270593}                     \\ \hline
 \end{tabular}
 \caption{Optimal parameters and error on Test set}
 \end{table}
 These following figures are the visualization of results.
+
 \begin{figure}[H]
-  \centering
-  \includegraphics[width=\textwidth,keepaspectratio]{figs/arima_1_1_18_open.png}
-  \caption{ARIMA(1,1,18) on Open price.}
+  \begin{subfigure}[b]{0.5\textwidth}
+    \includegraphics[width=\textwidth,keepaspectratio]{figs/arima_1_1_18_open.png}
+    \caption{ARIMA(1,1,18) Open.}
+  \end{subfigure}
+  \quad\quad\quad\quad\quad\quad\quad
+  \begin{subfigure}[b]{0.5\textwidth}
+    \includegraphics[width=\linewidth,keepaspectratio]{figs/arima_2_1_25_high.png}
+    \caption{High}
+    \caption{ARIMA(2,1,25) on High price.}
+  \end{subfigure}\\
+  \begin{subfigure}[b]{0.5\textwidth}
+    \includegraphics[width=\linewidth,keepaspectratio]{figs/arima_26_1_1_low.png}
+    \caption{ARIMA(1,1,26) on Low price.}
+    \caption{Low}
+  \end{subfigure}
+  \quad\quad\quad\quad\quad\quad\quad
+  \begin{subfigure}[b]{0.5\textwidth}
+    \includegraphics[width=\linewidth,keepaspectratio]{figs/arima_1_1_18_close.png}
+    \caption{Close}
+    \caption{ARIMA(1,1,18) on Close price.}
+  \end{subfigure}
+  \caption{Prediction on Test set.}
 \end{figure}
+Since the difference between observed and predicted data is small, we plot a
+small subset of values, for example Open prices from timesteps 500 to 600, in
+order to see the difference easier.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\linewidth,keepaspectratio]{figs/arima_2_1_25_high.png}
-  \caption{ARIMA(2,1,25) on High price.}
+  \includegraphics[width=\textwidth,keepaspectratio]{figs/arima_open_sample.png}
+  \caption{ARIMA(1,1,18) on Open price, sample of 100 values}
 \end{figure}
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth,keepaspectratio]{figs/arima_26_1_1_low.png}
-  \caption{ARIMA(1,1,26) on Low price.}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth,keepaspectratio]{figs/arima_1_1_18_close.png}
-  \caption{ARIMA(1,1,18) on Close price.}
-\end{figure}
 
 \subsubsection{Results from LSTM}
 
@@ -389,7 +401,6 @@ These following figures are the visualization of results.
 \end{tabular}
 \caption{Optimal parameters and error on Test set}
 \end{table}
-
 
 \begin{figure}[H]
   \centering
@@ -454,32 +465,16 @@ These following figures are the visualization of results.
 \end{figure}
 
 Since \textit{VAR(20)} fits the test set very well, for visualization, we draw
-an additional plot for values 500-600 to highlights the minute differences
-between prediction and actual observation. 
+an additional plot for less value, for example values from timesteps 500 to 600
+of Open prices in order observe the minute differences between prediction and
+actual observation. 
 
 \begin{figure}[H]
   \centering
   \includegraphics[width=\textwidth,keepaspectratio]{figs/var20open100.png}
-  \caption{VAR(20) on Open price.}
+  \caption{VAR(20) on Open price, sample of 100 values}
 \end{figure}
 
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth,keepaspectratio]{figs/var20high100.png}
-  \caption{VAR(20) on High price.}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth,keepaspectratio]{figs/var20low100.png}
-  \caption{VAR(20) on Low price.}
-\end{figure}
-
-\begin{figure}[H]
-  \centering
-  \includegraphics[width=\linewidth,keepaspectratio]{figs/var20close100.png}
-  \caption{VAR(20) on Close price.}
-\end{figure}
 
 \subsubsection{Results from LSTM}
 
