@@ -1,0 +1,3 @@
+*.m linguist-language=Matlab
+*.mat linguist-language=Matlab
+report/* linguist-documentation
