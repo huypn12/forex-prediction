@@ -1,9 +1,9 @@
-# ml_proj
+# Forex price prediction
 
 Machine Learning with Matlab 2018. Final project on Timeseries Prediction with LSTM / RNN.
 
 1. Installation
-	In order to run the project, the following Matlab Toolboxes must be installed: 
+In order to run the project, the following Matlab Toolboxes must be installed: 
 		1. Statistics and Machine Learning Toolbox
 		2. Econometrics Toolbox
 		3. Deep Learning Toolbox
