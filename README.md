@@ -1,7 +1,7 @@
 # Forex price prediction
 Machine Learning with Matlab 2018. Final project on Timeseries Prediction with LSTM / RNN.
 
-## Caveats
+## Disclaimers
 As for prediction, this project is even worse than a naiive coin toss. While ARIMA/VAR model is stupidly simple yet showing some reasonable prediction, the LSTM model is an utter nonsense. The LSTM essentially does nothing but use the last observed tick as the 'prediction'; as the result, the predicted ticks, once charted, looks exactly like the test dataset, shifted one timestep to the future.
 
 **To summarize, the so-called 'deep-learning' model in this project is a total heap of crap.**
